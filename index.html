@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rekap Ketidakhadiran Peserta TKA</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- SheetJS (XLSX Export Library) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Google Font (Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0284c7',
+              700: '#0369a1',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Reset & Clean SaaS Background */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+
+    /* Glassmorphism Classes */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    
+    .glass-sidebar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      border-right: 1px solid #e2e8f0;
+    }
+
+    .glass-bottom-nav {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid #e2e8f0;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Modal Animation */
+    .modal-backdrop {
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col md:flex-row overflow-x-hidden">
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- DESKTOP FIXED SIDEBAR (Visible on md+) -->
+  <aside class="hidden md:flex flex-col w-64 glass-sidebar h-screen sticky top-0 z-30 p-5 space-y-8">
+    <div class="flex items-center space-x-3 px-2">
+      <div class="p-2.5 bg-sky-600 text-white rounded-xl shadow-md shadow-sky-500/20">
+        <i data-lucide="clipboard-check" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-slate-800 text-lg leading-tight">Rekap TKA</h1>
+        <p class="text-xs font-medium text-slate-400">Astra SaaS Admin</p>
+      </div>
+    </div>
+
+    <nav class="flex-1 space-y-1.5">
+      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 bg-sky-50 text-sky-600 shadow-sm">
+        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+        <span>Dashboard</span>
+      </button>
+
+      <button onclick="switchTab('input')" id="nav-input" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+        <i data-lucide="user-plus" class="w-5 h-5"></i>
+        <span>Input Ketidakhadiran</span>
+      </button>
+
+      <button onclick="switchTab('rekap')" id="nav-rekap" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+        <i data-lucide="table" class="w-5 h-5"></i>
+        <span>Data Rekapitulasi</span>
+      </button>
+    </nav>
+
+    <!-- Footer Sidebar Info -->
+    <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
+      <div class="flex items-center space-x-2 text-xs font-semibold text-slate-500">
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span id="statusMode">System Ready</span>
+      </div>
+      <p class="text-xs text-slate-400">TKA Attendance Dashboard v1.0</p>
+    </div>
+  </aside>
+
+  <!-- MOBILE BOTTOM NAVIGATION (Visible only on mobile screens) -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 glass-bottom-nav z-40 px-4 py-2 flex justify-around items-center">
+    <button onclick="switchTab('dashboard')" id="mobile-nav-dashboard" class="mobile-nav-btn flex flex-col items-center p-2 rounded-lg text-sky-600 font-medium text-xs space-y-1">
+      <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+      <span>Dashboard</span>
+    </button>
+
+    <button onclick="switchTab('input')" id="mobile-nav-input" class="mobile-nav-btn flex flex-col items-center p-2 rounded-lg text-slate-500 font-medium text-xs space-y-1">
+      <i data-lucide="user-plus" class="w-5 h-5"></i>
+      <span>Input</span>
+    </button>
+
+    <button onclick="switchTab('rekap')" id="mobile-nav-rekap" class="mobile-nav-btn flex flex-col items-center p-2 rounded-lg text-slate-500 font-medium text-xs space-y-1">
+      <i data-lucide="table" class="w-5 h-5"></i>
+      <span>Rekap Data</span>
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-1 p-4 sm:p-6 lg:p-8 mb-16 md:mb-0 max-w-7xl mx-auto w-full">
+
+    <!-- TOP HEADER BAR -->
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div>
+        <h2 id="pageTitle" class="text-2xl font-bold text-slate-900 tracking-tight">Dashboard Analitik</h2>
+        <p id="pageSubtitle" class="text-sm text-slate-500 mt-1">Ringkasan statistik real-time ketidakhadiran Peserta TKA</p>
+      </div>
+      <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+        <button onclick="manualRefresh()" class="flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm transition-all">
+          <i data-lucide="refresh-cw" class="w-4 h-4 text-slate-500"></i>
+          <span>Muat Ulang</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- SECTION 1: DASHBOARD -->
+    <section id="tab-dashboard" class="space-y-6">
+      <!-- METRIC CARDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Card 1 -->
+        <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Tidak Hadir</p>
+              <h3 id="statTotal" class="text-3xl font-extrabold text-slate-900 mt-2">0</h3>
+            </div>
+            <div class="p-3 bg-sky-50 text-sky-600 rounded-xl">
+              <i data-lucide="users" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <p class="text-xs text-slate-500 mt-3 flex items-center">
+            <span class="text-slate-400 font-medium">Akumulasi peserta</span>
+          </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sakit / Izin</p>
+              <h3 id="statSakitIzin" class="text-3xl font-extrabold text-amber-600 mt-2">0</h3>
+            </div>
+            <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+              <i data-lucide="file-text" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <p class="text-xs text-slate-500 mt-3">Dengan surat/keterangan resmi</p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanpa Keterangan</p>
+              <h3 id="statTK" class="text-3xl font-extrabold text-rose-600 mt-2">0</h3>
+            </div>
+            <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+              <i data-lucide="user-x" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <p class="text-xs text-slate-500 mt-3">Absen tanpa berita</p>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sesi-1 vs Sesi-2</p>
+              <h3 id="statSesiRatio" class="text-2xl font-extrabold text-slate-900 mt-2">0 / 0</h3>
+            </div>
+            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+              <i data-lucide="clock" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <p class="text-xs text-slate-500 mt-3">Perbandingan jumlah per sesi</p>
+        </div>
+      </div>
+
+      <!-- CHARTS SECTION -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Chart 1: Alasan Ketidakhadiran -->
+        <div class="glass-card p-6 rounded-2xl border border-slate-100">
+          <h4 class="font-bold text-slate-800 text-base mb-4 flex items-center space-x-2">
+            <i data-lucide="pie-chart" class="w-5 h-5 text-sky-600"></i>
+            <span>Distribusi Alasan Ketidakhadiran</span>
+          </h4>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="chartAlasan"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Per Program Keahlian -->
+        <div class="glass-card p-6 rounded-2xl border border-slate-100">
+          <h4 class="font-bold text-slate-800 text-base mb-4 flex items-center space-x-2">
+            <i data-lucide="bar-chart-2" class="w-5 h-5 text-sky-600"></i>
+            <span>Ketidakhadiran per Program Keahlian</span>
+          </h4>
+          <div class="h-64">
+            <canvas id="chartJurusan"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: INPUT FORM -->
+    <section id="tab-input" class="hidden">
+      <div class="max-w-3xl mx-auto glass-card p-6 sm:p-8 rounded-2xl border border-slate-100 shadow-sm">
+        <div class="mb-6 pb-4 border-b border-slate-100">
+          <h3 class="text-lg font-bold text-slate-800">Formulir Catat Ketidakhadiran Peserta</h3>
+          <p class="text-xs text-slate-500">Lengkapi data di bawah ini untuk mencatat ketidakhadiran peserta TKA.</p>
+        </div>
+
+        <form id="formAbsensi" onsubmit="handleFormSubmit(event)" class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <!-- Username -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Username / NISN <span class="text-rose-500">*</span></label>
+              <input type="text" id="username" required placeholder="Contoh: 005432198" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white/70">
+            </div>
+
+            <!-- Nama Lengkap -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nama Lengkap <span class="text-rose-500">*</span></label>
+              <input type="text" id="namaLengkap" required placeholder="Contoh: Ahmad Subagja" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white/70">
+            </div>
+
+            <!-- Program Keahlian -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Program Keahlian <span class="text-rose-500">*</span></label>
+              <input type="text" id="programKeahlian" required placeholder="Contoh: Teknik Komputer & Jaringan" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white/70">
+            </div>
+
+            <!-- Kelas -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Kelas <span class="text-rose-500">*</span></label>
+              <input type="text" id="kelas" required placeholder="Contoh: XII TKJ 1" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white/70">
+            </div>
+
+            <!-- Nama Labor -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nama Labor / Ruang <span class="text-rose-500">*</span></label>
+              <input type="text" id="namaLabor" required placeholder="Contoh: Lab Komputer 02" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white/70">
+            </div>
+
+            <!-- Sesi -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Sesi Ujian <span class="text-rose-500">*</span></label>
+              <select id="sesi" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white">
+                <option value="">-- Pilih Sesi --</option>
+                <option value="Sesi-1">Sesi-1</option>
+                <option value="Sesi-2">Sesi-2</option>
+              </select>
+            </div>
+
+            <!-- Mata Uji -->
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Mata Uji <span class="text-rose-500">*</span></label>
+              <select id="mataUji" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white">
+                <option value="">-- Pilih Mata Uji --</option>
+                <option value="Bahasa Indonesia dan Literasi">Bahasa Indonesia dan Literasi</option>
+                <option value="Bahasa Inggris dan Sulingjar">Bahasa Inggris dan Sulingjar</option>
+                <option value="Matematika dan Numerasi">Matematika dan Numerasi</option>
+                <option value="2 Mapel Pilihan">2 Mapel Pilihan</option>
+              </select>
+            </div>
+
+            <!-- Alasan Tidak Hadir -->
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Alasan Tidak Hadir <span class="text-rose-500">*</span></label>
+              <select id="alasan" required onchange="toggleAlasanLainnya(this.value)" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white">
+                <option value="">-- Pilih Alasan --</option>
+                <option value="Sakit">Sakit</option>
+                <option value="Izin">Izin</option>
+                <option value="Tanpa Keterangan">Tanpa Keterangan</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+            </div>
+
+            <!-- Input Alasan Lainnya (Conditional) -->
+            <div id="wrapperAlasanLainnya" class="sm:col-span-2 hidden">
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Detail Alasan Lainnya</label>
+              <input type="text" id="keteranganLain" placeholder="Tuliskan alasan spesifik..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white/70">
+            </div>
+          </div>
+
+          <div class="pt-4 flex justify-end space-x-3">
+            <button type="button" onclick="document.getElementById('formAbsensi').reset()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium text-sm transition-all">
+              Reset
+            </button>
+            <button type="submit" id="btnSubmit" class="px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm shadow-md shadow-sky-500/20 transition-all flex items-center space-x-2">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>Simpan Data</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- SECTION 3: REKAP TABLE & EXPORT -->
+    <section id="tab-rekap" class="hidden space-y-4">
+      <!-- CONTROL BAR & FILTERS -->
+      <div class="glass-card p-4 rounded-2xl border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+        <!-- Search Input -->
+        <div class="relative w-full md:w-72">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+          <input type="text" id="searchInput" onkeyup="applyFilterAndSearch()" placeholder="Cari nama, NISN, labor..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white">
+        </div>
+
+        <!-- Filters -->
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <select id="filterSesi" onchange="applyFilterAndSearch()" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium bg-white focus:outline-none">
+            <option value="">Semua Sesi</option>
+            <option value="Sesi-1">Sesi-1</option>
+            <option value="Sesi-2">Sesi-2</option>
+          </select>
+
+          <select id="filterAlasan" onchange="applyFilterAndSearch()" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium bg-white focus:outline-none">
+            <option value="">Semua Alasan</option>
+            <option value="Sakit">Sakit</option>
+            <option value="Izin">Izin</option>
+            <option value="Tanpa Keterangan">Tanpa Keterangan</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+
+          <!-- Export Buttons -->
+          <button onclick="exportToXLSX()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center space-x-1.5 shadow-sm transition-all">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+            <span>Export Excel (.xlsx)</span>
+          </button>
+          <button onclick="exportToCSV()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TABLE CONTAINER -->
+      <div class="glass-card rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-100">
+              <tr>
+                <th class="py-3.5 px-4">No</th>
+                <th class="py-3.5 px-4">Peserta</th>
+                <th class="py-3.5 px-4">Program / Kelas</th>
+                <th class="py-3.5 px-4">Labor</th>
+                <th class="py-3.5 px-4">Sesi & Mata Uji</th>
+                <th class="py-3.5 px-4">Alasan</th>
+                <th class="py-3.5 px-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="rekapTableBody" class="divide-y divide-slate-100 text-slate-700">
+              <!-- Rendered dynamically -->
+              <tr>
+                <td colspan="7" class="py-8 text-center text-slate-400">
+                  <div class="flex flex-col items-center justify-center space-y-2">
+                    <i data-lucide="inbox" class="w-8 h-8 text-slate-300"></i>
+                    <span>Memuat data...</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table Footer Info -->
+        <div class="p-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500">
+          <span id="recordCountInfo">Menampilkan 0 data</span>
+          <span>Platform Rekap TKA</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-slate-100">
+      <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+      </div>
+      <div class="text-center">
+        <h3 class="text-base font-bold text-slate-900">Hapus Record</h3>
+        <p class="text-xs text-slate-500 mt-1">Apakah Anda yakin ingin menghapus data ketidakhadiran ini?</p>
+      </div>
+      <div class="flex space-x-3 pt-2">
+        <button onclick="closeDeleteModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-all">
+          Batal
+        </button>
+        <button id="confirmDeleteBtn" onclick="executeDelete()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-md transition-all">
+          Hapus
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC & FIREBASE INTEGRATION -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      deleteDoc, 
+      doc, 
+      onSnapshot, 
+      getDocs, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // -------------------------------------------------------------
+    // KONFIGURASI FIREBASE & PREVIEW SWITCH
+    // -------------------------------------------------------------
+    const IS_PREVIEW = false; // Set false jika siap digunakan di Blogger/Production
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCD0t_vIufBLsxg06cnv6udzCaXEYTBtJA",
+      authDomain: "daftar-hadir-b8c02.firebaseapp.com",
+      projectId: "daftar-hadir-b8c02",
+      storageBucket: "daftar-hadir-b8c02.firebasestorage.app",
+      messagingSenderId: "521463717668",
+      appId: "1:521463717668:web:96825b0e05d5663b735db1"
+    };
+
+    // Application state
+    let db = null;
+    let auth = null;
+    let globalAbsensiData = [];
+    let pendingDeleteId = null;
+    let chartAlasanInstance = null;
+    let chartJurusanInstance = null;
+
+    // Get standard App ID
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'rekap-tka-app';
+
+    // Dummy seed data for auto setup
+    const DUMMY_DATA = [
+      {
+        username: "2024001",
+        namaLengkap: "Budi Santoso",
+        programKeahlian: "Teknik Komputer & Jaringan",
+        kelas: "XII TKJ 1",
+        namaLabor: "Lab Komp 01",
+        sesi: "Sesi-1",
+        mataUji: "Bahasa Indonesia dan Literasi",
+        alasan: "Sakit",
+        keteranganLain: "",
+        createdAt: new Date()
+      },
+      {
+        username: "2024002",
+        namaLengkap: "Siti Rahmawati",
+        programKeahlian: "Rekayasa Perangkat Lunak",
+        kelas: "XII RPL 2",
+        namaLabor: "Lab Komp 03",
+        sesi: "Sesi-1",
+        mataUji: "Bahasa Indonesia dan Literasi",
+        alasan: "Izin",
+        keteranganLain: "Mengikuti Lomba LKS",
+        createdAt: new Date()
+      },
+      {
+        username: "2024003",
+        namaLengkap: "Doni Prasetyo",
+        programKeahlian: "Teknik Sepeda Motor",
+        kelas: "XII TSM 1",
+        namaLabor: "Lab Komp 02",
+        sesi: "Sesi-2",
+        mataUji: "Matematika dan Numerasi",
+        alasan: "Tanpa Keterangan",
+        keteranganLain: "",
+        createdAt: new Date()
+      }
+    ];
+
+    // Helper to escape HTML characters safely
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return str;
+      return str.replace(/[&<>"']/g, function(m) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        }[m];
+      });
+    }
+
+    // PWA Service Worker dynamic registration via Blob
+    function initPWA() {
+      const manifest = {
+        name: "Rekap Ketidakhadiran TKA",
+        short_name: "RekapTKA",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#ffffff",
+        theme_color: "#0284c7"
+      };
+      const stringManifest = JSON.stringify(manifest);
+      const blobManifest = new Blob([stringManifest], { type: 'application/json' });
+      const manifestURL = URL.createObjectURL(blobManifest);
+
+      let link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = manifestURL;
+      document.head.appendChild(link);
+
+      if ('serviceWorker' in navigator) {
+        const swCode = `
+          self.addEventListener('install', (e) => self.skipWaiting());
+          self.addEventListener('activate', (e) => self.clients.claim());
+          self.addEventListener('fetch', (e) => {});
+        `;
+        const blobSW = new Blob([swCode], { type: 'application/javascript' });
+        const swURL = URL.createObjectURL(blobSW);
+        navigator.serviceWorker.register(swURL).catch(err => console.log('SW Registration failed:', err));
+      }
+    }
+
+    // Helper for Toast Notifications
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      let bg = 'bg-slate-800 text-white';
+      if (type === 'success') bg = 'bg-emerald-600 text-white';
+      if (type === 'error') bg = 'bg-rose-600 text-white';
+
+      toast.className = `${bg} px-4 py-3 rounded-xl shadow-lg text-xs font-medium transition-all transform duration-300 pointer-events-auto flex items-center space-x-2`;
+      toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Initialize application on load
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Initialize icons
+      lucide.createIcons();
+
+      // Register PWA Service Worker
+      initPWA();
+
+      // Setup Database & App Mode
+      if (!IS_PREVIEW && firebaseConfig.apiKey !== "API_KEY_ANDA") {
+        try {
+          const app = initializeApp(firebaseConfig);
+          auth = getAuth(app);
+          db = getFirestore(app);
+
+          // Authenticate anonymously for public access
+          await signInAnonymously(auth);
+          document.getElementById('statusMode').innerText = "Live Database Mode";
+          
+          // Auto Setup Database
+          await autoSetupDatabase();
+
+          // Listen real-time data
+          listenRealtimeData();
+        } catch (error) {
+          console.error("Firebase Init Error:", error);
+          showToast("Gagal koneksi ke Firebase, beralih ke local storage mode.", "error");
+          loadLocalFallback();
+        }
+      } else {
+        document.getElementById('statusMode').innerText = "Demo / Local Mode";
+        loadLocalFallback();
+      }
+    });
+
+    // -------------------------------------------------------------
+    // DATABASE & AUTO SETUP
+    // -------------------------------------------------------------
+    async function autoSetupDatabase() {
+      if (!db) return;
+      try {
+        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'absensi_tka');
+        const snapshot = await getDocs(colRef);
+        
+        if (snapshot.empty) {
+          console.log("Database kosong, menyuntikkan data dummy awal...");
+          for (const item of DUMMY_DATA) {
+            await addDoc(colRef, {
+              ...item,
+              createdAt: serverTimestamp()
+            });
+          }
+          showToast("Database berhasil di-setup otomatis dengan data awal!", "success");
+        }
+      } catch (err) {
+        console.error("Auto Setup Failed:", err);
+      }
+    }
+
+    function listenRealtimeData() {
+      if (!db) return;
+      const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'absensi_tka');
+      onSnapshot(colRef, (snapshot) => {
+        globalAbsensiData = [];
+        snapshot.forEach((doc) => {
+          globalAbsensiData.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+        updateUI();
+      }, (error) => {
+        console.error("Firestore Listen Error:", error);
+        showToast("Error saat membaca data real-time.", "error");
+      });
+    }
+
+    function loadLocalFallback() {
+      const stored = localStorage.getItem('tka_absensi_demo_data');
+      if (stored) {
+        globalAbsensiData = JSON.parse(stored);
+      } else {
+        globalAbsensiData = DUMMY_DATA.map((item, index) => ({ id: 'demo-' + index, ...item }));
+        saveLocalData();
+      }
+      updateUI();
+    }
+
+    function saveLocalData() {
+      localStorage.setItem('tka_absensi_demo_data', JSON.stringify(globalAbsensiData));
+    }
+
+    // -------------------------------------------------------------
+    // UI UPDATES & CHARTS
+    // -------------------------------------------------------------
+    function updateUI() {
+      renderTable(globalAbsensiData);
+      renderMetrics(globalAbsensiData);
+      renderCharts(globalAbsensiData);
+    }
+
+    function renderMetrics(data) {
+      const total = data.length;
+      const sakitIzin = data.filter(d => d.alasan === 'Sakit' || d.alasan === 'Izin').length;
+      const tk = data.filter(d => d.alasan === 'Tanpa Keterangan').length;
+      const sesi1 = data.filter(d => d.sesi === 'Sesi-1').length;
+      const sesi2 = data.filter(d => d.sesi === 'Sesi-2').length;
+
+      document.getElementById('statTotal').innerText = total;
+      document.getElementById('statSakitIzin').innerText = sakitIzin;
+      document.getElementById('statTK').innerText = tk;
+      document.getElementById('statSesiRatio').innerText = `${sesi1} / ${sesi2}`;
+    }
+
+    function renderCharts(data) {
+      // 1. Chart Alasan
+      const alasanCounts = { Sakit: 0, Izin: 0, 'Tanpa Keterangan': 0, Lainnya: 0 };
+      data.forEach(d => {
+        if (alasanCounts[d.alasan] !== undefined) alasanCounts[d.alasan]++;
+        else alasanCounts.Lainnya++;
+      });
+
+      const ctxAlasan = document.getElementById('chartAlasan').getContext('2d');
+      if (chartAlasanInstance) chartAlasanInstance.destroy();
+      
+      chartAlasanInstance = new Chart(ctxAlasan, {
+        type: 'doughnut',
+        data: {
+          labels: ['Sakit', 'Izin', 'Tanpa Keterangan', 'Lainnya'],
+          datasets: [{
+            data: Object.values(alasanCounts),
+            backgroundColor: ['#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+
+      // 2. Chart Program Keahlian
+      const jurusanMap = {};
+      data.forEach(d => {
+        const prog = d.programKeahlian || 'Lainnya';
+        jurusanMap[prog] = (jurusanMap[prog] || 0) + 1;
+      });
+
+      const ctxJurusan = document.getElementById('chartJurusan').getContext('2d');
+      if (chartJurusanInstance) chartJurusanInstance.destroy();
+
+      chartJurusanInstance = new Chart(ctxJurusan, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(jurusanMap),
+          datasets: [{
+            label: 'Jumlah Tidak Hadir',
+            data: Object.values(jurusanMap),
+            backgroundColor: '#0284c7',
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('rekapTableBody');
+      tbody.innerHTML = '';
+
+      if (data.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-8 text-center text-slate-400">
+              Tidak ada data ketidakhadiran yang cocok.
+            </td>
+          </tr>
+        `;
+        document.getElementById('recordCountInfo').innerText = 'Menampilkan 0 data';
+        return;
+      }
+
+      data.forEach((item, index) => {
+        let badgeColor = 'bg-slate-100 text-slate-700';
+        if (item.alasan === 'Sakit') badgeColor = 'bg-amber-50 text-amber-700 border border-amber-200';
+        else if (item.alasan === 'Izin') badgeColor = 'bg-sky-50 text-sky-700 border border-sky-200';
+        else if (item.alasan === 'Tanpa Keterangan') badgeColor = 'bg-rose-50 text-rose-700 border border-rose-200';
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/80 transition-colors";
+        tr.innerHTML = `
+          <td class="py-3.5 px-4 font-medium text-slate-400">${index + 1}</td>
+          <td class="py-3.5 px-4">
+            <div class="font-bold text-slate-800">${escapeHtml(item.namaLengkap)}</div>
+            <div class="text-xs text-slate-400">NISN: ${escapeHtml(item.username)}</div>
+          </td>
+          <td class="py-3.5 px-4">
+            <div class="text-slate-800 font-medium">${escapeHtml(item.programKeahlian)}</div>
+            <div class="text-xs text-slate-500">${escapeHtml(item.kelas)}</div>
+          </td>
+          <td class="py-3.5 px-4 font-medium text-slate-700">
+            ${escapeHtml(item.namaLabor)}
+          </td>
+          <td class="py-3.5 px-4">
+            <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 mr-1">${escapeHtml(item.sesi)}</span>
+            <div class="text-xs text-slate-500 mt-1">${escapeHtml(item.mataUji)}</div>
+          </td>
+          <td class="py-3.5 px-4">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${badgeColor}">
+              ${escapeHtml(item.alasan)}
+            </span>
+            ${item.keteranganLain ? `<div class="text-xs text-slate-400 mt-1 italic">${escapeHtml(item.keteranganLain)}</div>` : ''}
+          </td>
+          <td class="py-3.5 px-4 text-center">
+            <button onclick="promptDelete('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-all">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('recordCountInfo').innerText = `Menampilkan ${data.length} data`;
+      lucide.createIcons();
+    }
+
+    // -------------------------------------------------------------
+    // FORM & EVENT HANDLERS
+    // -------------------------------------------------------------
+    window.handleFormSubmit = async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.innerText = "Saving...";
+
+      const payload = {
+        username: document.getElementById('username').value.trim(),
+        namaLengkap: document.getElementById('namaLengkap').value.trim(),
+        programKeahlian: document.getElementById('programKeahlian').value.trim(),
+        kelas: document.getElementById('kelas').value.trim(),
+        namaLabor: document.getElementById('namaLabor').value.trim(),
+        sesi: document.getElementById('sesi').value,
+        mataUji: document.getElementById('mataUji').value,
+        alasan: document.getElementById('alasan').value,
+        keteranganLain: document.getElementById('keteranganLain').value.trim(),
+        createdAt: new Date()
+      };
+
+      try {
+        if (!IS_PREVIEW && db) {
+          const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'absensi_tka');
+          await addDoc(colRef, { ...payload, createdAt: serverTimestamp() });
+        } else {
+          payload.id = 'demo-' + Date.now();
+          globalAbsensiData.unshift(payload);
+          saveLocalData();
+          updateUI();
+        }
+
+        showToast("Data ketidakhadiran berhasil disimpan!", "success");
+        document.getElementById('formAbsensi').reset();
+        document.getElementById('wrapperAlasanLainnya').classList.add('hidden');
+        switchTab('rekap');
+      } catch (err) {
+        console.error("Save Error:", err);
+        showToast("Gagal menyimpan data.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="send" class="w-4 h-4"></i><span>Simpan Data</span>`;
+        lucide.createIcons();
+      }
+    };
+
+    window.toggleAlasanLainnya = function(val) {
+      const wrapper = document.getElementById('wrapperAlasanLainnya');
+      if (val === 'Lainnya') {
+        wrapper.classList.remove('hidden');
+      } else {
+        wrapper.classList.add('hidden');
+      }
+    };
+
+    window.applyFilterAndSearch = function() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const sesi = document.getElementById('filterSesi').value;
+      const alasan = document.getElementById('filterAlasan').value;
+
+      const filtered = globalAbsensiData.filter(item => {
+        const matchSearch = item.namaLengkap.toLowerCase().includes(search) ||
+                            item.username.toLowerCase().includes(search) ||
+                            item.namaLabor.toLowerCase().includes(search) ||
+                            item.programKeahlian.toLowerCase().includes(search);
+        
+        const matchSesi = sesi === '' || item.sesi === sesi;
+        const matchAlasan = alasan === '' || item.alasan === alasan;
+
+        return matchSearch && matchSesi && matchAlasan;
+      });
+
+      renderTable(filtered);
+    };
+
+    window.promptDelete = function(id) {
+      pendingDeleteId = id;
+      document.getElementById('deleteModal').classList.remove('hidden');
+    };
+
+    window.closeDeleteModal = function() {
+      pendingDeleteId = null;
+      document.getElementById('deleteModal').classList.add('hidden');
+    };
+
+    window.executeDelete = async function() {
+      if (!pendingDeleteId) return;
+
+      try {
+        if (!IS_PREVIEW && db) {
+          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'absensi_tka', pendingDeleteId);
+          await deleteDoc(docRef);
+        } else {
+          globalAbsensiData = globalAbsensiData.filter(d => d.id !== pendingDeleteId);
+          saveLocalData();
+          updateUI();
+        }
+        showToast("Data telah berhasil dihapus.", "success");
+      } catch (err) {
+        console.error("Delete Error:", err);
+        showToast("Gagal menghapus data.", "error");
+      } finally {
+        closeDeleteModal();
+      }
+    };
+
+    window.switchTab = function(tabName) {
+      // Hide all tabs
+      ['dashboard', 'input', 'rekap'].forEach(tab => {
+        document.getElementById(`tab-${tab}`).classList.add('hidden');
+      });
+      // Show targeted tab
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+      // Update Nav Button Styles (Desktop)
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-sky-50', 'text-sky-600', 'shadow-sm');
+        btn.classList.add('text-slate-600');
+      });
+      document.getElementById(`nav-${tabName}`).classList.add('bg-sky-50', 'text-sky-600', 'shadow-sm');
+      document.getElementById(`nav-${tabName}`).classList.remove('text-slate-600');
+
+      // Update Mobile Nav Styles
+      document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+        btn.classList.remove('text-sky-600');
+        btn.classList.add('text-slate-500');
+      });
+      document.getElementById(`mobile-nav-${tabName}`).classList.add('text-sky-600');
+      document.getElementById(`mobile-nav-${tabName}`).classList.remove('text-slate-500');
+
+      // Titles Update
+      if (tabName === 'dashboard') {
+        document.getElementById('pageTitle').innerText = 'Dashboard Analitik';
+        document.getElementById('pageSubtitle').innerText = 'Ringkasan statistik real-time ketidakhadiran Peserta TKA';
+      } else if (tabName === 'input') {
+        document.getElementById('pageTitle').innerText = 'Input Ketidakhadiran';
+        document.getElementById('pageSubtitle').innerText = 'Formulir pengisian data ketidakhadiran peserta';
+      } else if (tabName === 'rekap') {
+        document.getElementById('pageTitle').innerText = 'Data Rekapitulasi';
+        document.getElementById('pageSubtitle').innerText = 'Daftar lengkap dan filter data ketidakhadiran TKA';
+      }
+    };
+
+    window.manualRefresh = function() {
+      if (!IS_PREVIEW && db) {
+        listenRealtimeData();
+      } else {
+        loadLocalFallback();
+      }
+      showToast("Data diperbarui.", "info");
+    };
+
+    window.exportToXLSX = function() {
+      if (globalAbsensiData.length === 0) {
+        showToast("Tidak ada data untuk diekspor.", "error");
+        return;
+      }
+
+      // Prepare array of objects for Excel export
+      const dataToExport = globalAbsensiData.map((row, index) => ({
+        "No": index + 1,
+        "Username / NISN": row.username || "",
+        "Nama Lengkap": row.namaLengkap || "",
+        "Program Keahlian": row.programKeahlian || "",
+        "Kelas": row.kelas || "",
+        "Nama Labor": row.namaLabor || "",
+        "Sesi": row.sesi || "",
+        "Mata Uji": row.mataUji || "",
+        "Alasan Ketidakhadiran": row.alasan || "",
+        "Keterangan Lainnya": row.keteranganLain || ""
+      }));
+
+      // Create Worksheet and Workbook
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Ketidakhadiran");
+
+      // Set custom column widths
+      worksheet['!cols'] = [
+        { wch: 5 },  // No
+        { wch: 16 }, // NISN
+        { wch: 25 }, // Nama
+        { wch: 25 }, // Jurusan
+        { wch: 12 }, // Kelas
+        { wch: 16 }, // Labor
+        { wch: 10 }, // Sesi
+        { wch: 28 }, // Mata Uji
+        { wch: 18 }, // Alasan
+        { wch: 25 }  // Keterangan
+      ];
+
+      // Export file
+      const fileName = `Rekap_Ketidakhadiran_TKA_${new Date().toISOString().slice(0,10)}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+
+      showToast("File Excel (.xlsx) berhasil diunduh!", "success");
+    };
+
+    window.exportToCSV = function() {
+      if (globalAbsensiData.length === 0) {
+        showToast("Tidak ada data untuk diekspor.", "error");
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "No,Username/NISN,Nama Lengkap,Program Keahlian,Kelas,Nama Labor,Sesi,Mata Uji,Alasan,Keterangan Lain\n";
+
+      globalAbsensiData.forEach((row, index) => {
+        const line = [
+          index + 1,
+          `"${row.username}"`,
+          `"${row.namaLengkap}"`,
+          `"${row.programKeahlian}"`,
+          `"${row.kelas}"`,
+          `"${row.namaLabor}"`,
+          `"${row.sesi}"`,
+          `"${row.mataUji}"`,
+          `"${row.alasan}"`,
+          `"${row.keteranganLain || ''}"`
+        ].join(",");
+        csvContent += line + "\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Rekap_Ketidakhadiran_TKA_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast("File CSV berhasil diunduh!", "success");
+    };
+  </script>
+</body>
+</html>
