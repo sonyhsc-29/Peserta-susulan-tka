@@ -1,1076 +1,1117 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rekap Ketidakhadiran Peserta TKA</title>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- SheetJS (XLSX Export Library) -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- Google Font (Inter) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#f0f7ff',
-              100: '#e0effe',
-              500: '#0284c7',
-              600: '#0284c7',
-              700: '#0369a1',
-              900: '#0c4a6e',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
-  <style>
-    /* Reset & Clean SaaS Background */
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8fafc;
-      color: #0f172a;
-    }
-
-    /* Glassmorphism Classes */
-    .glass-card {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(226, 232, 240, 0.8);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekap Ketidakhadiran TKA - SMKN 2 Padang</title>
     
-    .glass-sidebar {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(16px);
-      border-right: 1px solid #e2e8f0;
-    }
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 
-    .glass-bottom-nav {
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(16px);
-      border-top: 1px solid #e2e8f0;
-    }
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f4ff',
+                            100: '#e0e9fe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
+    <!-- Export XLSX Library (SheetJS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    /* Modal Animation */
-    .modal-backdrop {
-      background: rgba(15, 23, 42, 0.4);
-      backdrop-filter: blur(4px);
-    }
-  </style>
+    <!-- PWA Manifest Data URI -->
+    <script>
+        const manifestData = {
+            "name": "Rekap Ketidakhadiran TKA SMKN 2 Padang",
+            "short_name": "TKA SMKN 2",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#f8fafc",
+            "theme_color": "#2563eb",
+            "icons": [
+                {
+                    "src": "https://placehold.co/192x192/2563eb/ffffff?text=TKA",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                },
+                {
+                    "src": "https://placehold.co/512x512/2563eb/ffffff?text=TKA",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        };
+        const stringManifest = JSON.stringify(manifestData);
+        const manifestUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(stringManifest);
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = manifestUrl;
+        document.head.appendChild(link);
+    </script>
+
+    <!-- Dynamic Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', (e) => self.skipWaiting());
+                self.addEventListener('activate', (e) => self.clients.claim());
+                self.addEventListener('fetch', (e) => {});
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).catch(err => console.warn('SW error:', err));
+        }
+    </script>
+
+    <!-- Styles untuk 3D Claymorphism & UI Custom -->
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #1e293b;
+        }
+
+        /* 3D Claymorphism Cards & Buttons */
+        .clay-card {
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 
+                8px 8px 16px #e2e8f0, 
+                -8px -8px 16px #ffffff,
+                inset 2px 2px 4px rgba(255, 255, 255, 0.8),
+                inset -2px -2px 4px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .clay-card-subtle {
+            background: #f8fafc;
+            border-radius: 20px;
+            box-shadow: 
+                inset 3px 3px 6px #cbd5e1, 
+                inset -3px -3px 6px #ffffff;
+        }
+
+        .clay-input {
+            background: #f1f5f9;
+            border-radius: 16px;
+            box-shadow: 
+                inset 3px 3px 6px #cbd5e1, 
+                inset -3px -3px 6px #ffffff;
+            border: 1px solid transparent;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .clay-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: #ffffff;
+            box-shadow: 
+                0 0 0 4px rgba(59, 130, 246, 0.15),
+                inset 2px 2px 4px #e2e8f0;
+        }
+
+        .clay-button-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 18px;
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 
+                6px 6px 12px #cbd5e1, 
+                -4px -4px 10px #ffffff,
+                inset 2px 2px 3px rgba(255, 255, 255, 0.4),
+                inset -2px -2px 3px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .clay-button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                8px 8px 16px #cbd5e1, 
+                -4px -4px 12px #ffffff,
+                inset 2px 2px 4px rgba(255, 255, 255, 0.5);
+        }
+
+        .clay-button-primary:active {
+            transform: translateY(1px);
+            box-shadow: 
+                inset 3px 3px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .clay-button-success {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            border-radius: 18px;
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 
+                6px 6px 12px #cbd5e1, 
+                -4px -4px 10px #ffffff,
+                inset 2px 2px 3px rgba(255, 255, 255, 0.4);
+        }
+
+        .clay-button-success:hover {
+            transform: translateY(-2px);
+        }
+
+        .clay-badge {
+            border-radius: 12px;
+            box-shadow: 
+                2px 2px 5px #e2e8f0, 
+                -2px -2px 5px #ffffff;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col md:flex-row overflow-x-hidden">
+<body class="min-h-screen flex flex-col lg:flex-row antialiased selection:bg-brand-500 selection:text-white">
 
-  <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
-  <!-- DESKTOP FIXED SIDEBAR (Visible on md+) -->
-  <aside class="hidden md:flex flex-col w-64 glass-sidebar h-screen sticky top-0 z-30 p-5 space-y-8">
-    <div class="flex items-center space-x-3 px-2">
-      <div class="p-2.5 bg-sky-600 text-white rounded-xl shadow-md shadow-sky-500/20">
-        <i data-lucide="clipboard-check" class="w-6 h-6"></i>
-      </div>
-      <div>
-        <h1 class="font-bold text-slate-800 text-lg leading-tight">Rekap TKA</h1>
-        <p class="text-xs font-medium text-slate-400">Astra SaaS Admin</p>
-      </div>
+    <!-- TOP NAV MOBILE HEADER -->
+    <div class="lg:hidden bg-white/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4 border-b border-slate-100 flex justify-between items-center shadow-sm">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 clay-card flex items-center justify-center bg-brand-500 text-white font-bold text-lg">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-slate-800 text-sm leading-tight">TKA SMKN 2 Padang</h1>
+                <p class="text-[10px] font-medium text-slate-400">Rekap Ketidakhadiran</p>
+            </div>
+        </div>
+        <button id="adminMobileAuthBtn" onclick="window.openLoginModal()" class="px-3 py-1.5 text-xs font-semibold text-brand-600 bg-brand-50 rounded-xl clay-badge">
+            <i class="fa-solid fa-lock mr-1"></i> Admin
+        </button>
     </div>
 
-    <nav class="flex-1 space-y-1.5">
-      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 bg-sky-50 text-sky-600 shadow-sm">
-        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-        <span>Dashboard</span>
-      </button>
+    <!-- SIDEBAR DESKTOP (Fixed Left) -->
+    <aside class="hidden lg:flex flex-col w-72 h-screen sticky top-0 bg-white p-6 border-r border-slate-100 z-30 justify-between shadow-xl">
+        <div>
+            <!-- Logo Brand -->
+            <div class="flex items-center space-x-4 mb-8 px-2">
+                <div class="w-12 h-12 clay-card flex items-center justify-center bg-brand-600 text-white text-xl font-extrabold">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h2 class="font-extrabold text-slate-800 text-base leading-snug">SMKN 2 Padang</h2>
+                    <span class="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">TKA Online</span>
+                </div>
+            </div>
 
-      <button onclick="switchTab('input')" id="nav-input" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-        <i data-lucide="user-plus" class="w-5 h-5"></i>
-        <span>Input Ketidakhadiran</span>
-      </button>
+            <!-- Navigation Links -->
+            <nav class="space-y-3">
+                <button onclick="window.switchTab('formTab')" id="nav-formTab" class="nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-2xl font-bold text-sm text-brand-600 bg-brand-50 clay-badge transition-all">
+                    <i class="fa-solid fa-pen-to-square text-lg w-6"></i>
+                    <span>Form Input</span>
+                </button>
 
-      <button onclick="switchTab('rekap')" id="nav-rekap" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-        <i data-lucide="table" class="w-5 h-5"></i>
-        <span>Data Rekapitulasi</span>
-      </button>
+                <button onclick="window.switchTab('overviewTab')" id="nav-overviewTab" class="nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-2xl font-semibold text-sm text-slate-500 hover:bg-slate-50 transition-all">
+                    <i class="fa-solid fa-chart-pie text-lg w-6"></i>
+                    <span>Overview Stats</span>
+                </button>
+
+                <button onclick="window.switchTab('rekapTab')" id="nav-rekapTab" class="nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-2xl font-semibold text-sm text-slate-500 hover:bg-slate-50 transition-all">
+                    <i class="fa-solid fa-table-list text-lg w-6"></i>
+                    <span>Data Rekap</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Admin Control Footer -->
+        <div class="clay-card p-4 text-center">
+            <div id="adminStatusArea" class="space-y-2">
+                <span class="text-xs text-slate-400 font-medium block">Status Hak Akses:</span>
+                <span id="badgeAccessStatus" class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                    <i class="fa-solid fa-user text-slate-400 mr-1"></i> Mode Publik
+                </span>
+                <button id="adminAuthBtn" onclick="window.openLoginModal()" class="w-full mt-2 py-2 text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 rounded-xl transition">
+                    <i class="fa-solid fa-right-to-bracket mr-1"></i> Login Admin
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 p-4 lg:p-10 max-w-7xl mx-auto w-full pb-28 lg:pb-10">
+
+        <!-- HEADER BANNER DESKTOP -->
+        <header class="hidden lg:flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-800">Sistem Rekap Ketidakhadiran TKA</h1>
+                <p class="text-slate-400 text-sm font-medium">SMK Negeri 2 Padang - Tahun 2026</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="clay-card px-4 py-2 flex items-center space-x-2 text-xs font-semibold text-slate-600">
+                    <i class="fa-solid fa-calendar-day text-brand-500"></i>
+                    <span id="currentDateDisplay">-- --- ----</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Toast / Alert Notification Container -->
+        <div id="toastContainer" class="fixed top-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+        <!-- SECTION 1: FORM INPUT (PUBLIC) -->
+        <section id="formTab" class="tab-content block space-y-6">
+            <div class="clay-card p-6 lg:p-8">
+                <div class="border-b border-slate-100 pb-4 mb-6 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">Form Ketidakhadiran Peserta TKA</h2>
+                        <p class="text-xs text-slate-400 mt-1">Silakan isi data ketidakhadiran siswa dengan teliti dan lengkap.</p>
+                    </div>
+                    <span class="w-10 h-10 clay-card-subtle flex items-center justify-center text-brand-600 font-bold">
+                        <i class="fa-solid fa-file-pen"></i>
+                    </span>
+                </div>
+
+                <form id="presenceForm" onsubmit="window.handleFormSubmit(event)" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- 1. Username TKA -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">1. Username TKA / ID <span class="text-red-500">*</span></label>
+                            <input type="text" id="username_tka" required placeholder="Contoh: K080100002-01023" class="w-full px-4 py-3.5 clay-input text-sm font-medium text-slate-800">
+                        </div>
+
+                        <!-- 2. Nama Lengkap -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">2. Nama Lengkap Siswa <span class="text-red-500">*</span></label>
+                            <input type="text" id="nama_lengkap" required placeholder="Masukkan nama lengkap siswa..." class="w-full px-4 py-3.5 clay-input text-sm font-medium text-slate-800">
+                        </div>
+
+                        <!-- 3. Program Keahlian -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">3. Program Keahlian <span class="text-red-500">*</span></label>
+                            <select id="program_keahlian" required class="w-full px-4 py-3.5 clay-input text-sm font-semibold text-slate-700">
+                                <option value="" disabled selected>-- Pilih Program Keahlian --</option>
+                                <option value="Pemasaran">Pemasaran</option>
+                                <option value="AKL">AKL (Akuntansi dan Keuangan Lembaga)</option>
+                                <option value="MPLB">MPLB (Manajemen Perkantoran)</option>
+                                <option value="TJKT">TJKT (Teknik Jaringan Komputer & Telekomunikasi)</option>
+                                <option value="PPLG">PPLG (Pengembangan Perangkat Lunak & Gim)</option>
+                                <option value="ULW">ULW (Usaha Layanan Wisata)</option>
+                            </select>
+                        </div>
+
+                        <!-- 4. Kelas -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">4. Kelas <span class="text-red-500">*</span></label>
+                            <input type="text" id="kelas" required placeholder="Contoh: XII PPLG 1" class="w-full px-4 py-3.5 clay-input text-sm font-medium text-slate-800">
+                        </div>
+
+                        <!-- 5. Nama Labor -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">5. Nama Laboratorium <span class="text-red-500">*</span></label>
+                            <input type="text" id="nama_labor" required placeholder="Contoh: Lab Komputer 2" class="w-full px-4 py-3.5 clay-input text-sm font-medium text-slate-800">
+                        </div>
+
+                        <!-- 6. Sesi -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">6. Sesi Ujian <span class="text-red-500">*</span></label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="flex items-center p-3.5 clay-input cursor-pointer hover:bg-brand-50/50">
+                                    <input type="radio" name="sesi" value="Sesi 1" required class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+                                    <span class="ml-2 text-sm font-bold text-slate-700">Sesi 1</span>
+                                </label>
+                                <label class="flex items-center p-3.5 clay-input cursor-pointer hover:bg-brand-50/50">
+                                    <input type="radio" name="sesi" value="Sesi 2" required class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+                                    <span class="ml-2 text-sm font-bold text-slate-700">Sesi 2</span>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- 7. Nama Tes (Checklist Multi Select) -->
+                    <div class="space-y-3 pt-2">
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                            7. Nama Tes Yang Tidak Diikuti (Bisa Pilih Lebih Dari Satu) <span class="text-red-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="flex items-start p-3.5 clay-input cursor-pointer hover:bg-brand-50/40">
+                                <input type="checkbox" name="nama_tes" value="Bahasa Indonesia dan Literasi" class="mt-1 w-4 h-4 text-brand-600 rounded">
+                                <span class="ml-3 text-sm font-semibold text-slate-700">Bahasa Indonesia dan Literasi</span>
+                            </label>
+                            <label class="flex items-start p-3.5 clay-input cursor-pointer hover:bg-brand-50/40">
+                                <input type="checkbox" name="nama_tes" value="Bahasa Inggris dan Sulingjar" class="mt-1 w-4 h-4 text-brand-600 rounded">
+                                <span class="ml-3 text-sm font-semibold text-slate-700">Bahasa Inggris dan Sulingjar</span>
+                            </label>
+                            <label class="flex items-start p-3.5 clay-input cursor-pointer hover:bg-brand-50/40">
+                                <input type="checkbox" name="nama_tes" value="Matematika dan Numerasi" class="mt-1 w-4 h-4 text-brand-600 rounded">
+                                <span class="ml-3 text-sm font-semibold text-slate-700">Matematika dan Numerasi</span>
+                            </label>
+                            <label class="flex items-start p-3.5 clay-input cursor-pointer hover:bg-brand-50/40">
+                                <input type="checkbox" name="nama_tes" value="2 Mata Pelajaran Pilihan" class="mt-1 w-4 h-4 text-brand-600 rounded">
+                                <span class="ml-3 text-sm font-semibold text-slate-700">2 Mata Pelajaran Pilihan</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 8. Alasan Tidak Mengikuti Tes -->
+                    <div class="space-y-3 pt-2">
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                            8. Alasan Tidak Mengikuti Tes <span class="text-red-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <label class="flex items-center p-3.5 clay-input cursor-pointer hover:bg-brand-50/40">
+                                <input type="radio" name="alasan" value="Izin" required onclick="window.toggleLainnyaInput(false)" class="w-4 h-4 text-brand-600">
+                                <span class="ml-2 text-sm font-bold text-slate-700">Izin</span>
+                            </label>
+                            <label class="flex items-center p-3.5 clay-input cursor-pointer hover:bg-brand-50/40">
+                                <input type="radio" name="alasan" value="Sakit" required onclick="window.toggleLainnyaInput(false)" class="w-4 h-4 text-brand-600">
+                                <span class="ml-2 text-sm font-bold text-slate-700">Sakit</span>
+                            </label>
+                            <label class="flex items-center p-3.5 clay-input cursor-pointer hover:bg-brand-50/40">
+                                <input type="radio" name="alasan" value="Kendala Teknis" required onclick="window.toggleLainnyaInput(false)" class="w-4 h-4 text-brand-600">
+                                <span class="ml-2 text-sm font-bold text-slate-700">Kendala Teknis</span>
+                            </label>
+                            <label class="flex items-center p-3.5 clay-input cursor-pointer hover:bg-brand-50/40">
+                                <input type="radio" name="alasan" value="Lainnya" required onclick="window.toggleLainnyaInput(true)" class="w-4 h-4 text-brand-600">
+                                <span class="ml-2 text-sm font-bold text-slate-700">Lainnya</span>
+                            </label>
+                        </div>
+
+                        <!-- Optional Detail Jika Alasan 'Lainnya' -->
+                        <div id="containerLainnya" class="hidden mt-3">
+                            <input type="text" id="alasan_lainnya_text" placeholder="Sebutkan detail alasan..." class="w-full px-4 py-3 clay-input text-sm font-medium text-slate-800">
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-4 flex justify-end">
+                        <button type="submit" id="btnSubmitForm" class="w-full md:w-auto px-8 py-4 clay-button-primary text-base flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Kirim Rekap Ketidakhadiran</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- SECTION 2: OVERVIEW DASHBOARD (STATS) -->
+        <section id="overviewTab" class="tab-content hidden space-y-6">
+            <!-- Cards Summary Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                
+                <div class="clay-card p-5 border-l-4 border-brand-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Total Tidak Hadir</p>
+                            <h3 id="statTotalAbsen" class="text-3xl font-extrabold text-slate-800 mt-2">0</h3>
+                        </div>
+                        <div class="w-10 h-10 clay-card-subtle flex items-center justify-center text-brand-600">
+                            <i class="fa-solid fa-users-slash text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="clay-card p-5 border-l-4 border-amber-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Alasan Sakit / Izin</p>
+                            <h3 id="statSakitIzin" class="text-3xl font-extrabold text-slate-800 mt-2">0</h3>
+                        </div>
+                        <div class="w-10 h-10 clay-card-subtle flex items-center justify-center text-amber-600">
+                            <i class="fa-solid fa-notes-medical text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="clay-card p-5 border-l-4 border-rose-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Kendala Teknis</p>
+                            <h3 id="statKendala" class="text-3xl font-extrabold text-slate-800 mt-2">0</h3>
+                        </div>
+                        <div class="w-10 h-10 clay-card-subtle flex items-center justify-center text-rose-600">
+                            <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="clay-card p-5 border-l-4 border-emerald-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Jurusan Terbanyak</p>
+                            <h3 id="statTopJurusan" class="text-lg font-bold text-slate-800 mt-3 truncate">-</h3>
+                        </div>
+                        <div class="w-10 h-10 clay-card-subtle flex items-center justify-center text-emerald-600">
+                            <i class="fa-solid fa-school text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Breakdown Charts / Tables Mock Visualization -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Breakdown Per Jurusan -->
+                <div class="clay-card p-6">
+                    <h3 class="font-bold text-slate-800 text-base mb-4 flex items-center">
+                        <i class="fa-solid fa-chart-column text-brand-500 mr-2"></i> Rekap Per Program Keahlian
+                    </h3>
+                    <div id="listStatsJurusan" class="space-y-3">
+                        <p class="text-xs text-slate-400">Memuat statistik data...</p>
+                    </div>
+                </div>
+
+                <!-- Breakdown Per Sesi -->
+                <div class="clay-card p-6">
+                    <h3 class="font-bold text-slate-800 text-base mb-4 flex items-center">
+                        <i class="fa-solid fa-clock text-brand-500 mr-2"></i> Ketidakhadiran Per Sesi Ujian
+                    </h3>
+                    <div id="listStatsSesi" class="space-y-3">
+                        <p class="text-xs text-slate-400">Memuat statistik data...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: DATA REKAP & EXPORT XLSX (ADMIN FOCUS) -->
+        <section id="rekapTab" class="tab-content hidden space-y-6">
+            <div class="clay-card p-6">
+                
+                <!-- Action Header -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">Tabel Data Rekap Ketidakhadiran</h2>
+                        <p class="text-xs text-slate-400 mt-1">Seluruh data yang berhasil dikirimkan masuk ke tabel berikut.</p>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Export XLSX Button -->
+                        <button onclick="window.exportToXLSX()" class="px-5 py-2.5 clay-button-success text-xs font-bold flex items-center space-x-2">
+                            <i class="fa-solid fa-file-excel text-base"></i>
+                            <span>Export Data (.xlsx)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters & Search Bar -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
+                    <input type="text" id="searchKeyword" oninput="window.applyFilters()" placeholder="Cari nama, username, kelas..." class="px-4 py-2.5 clay-input text-xs font-medium">
+                    
+                    <select id="filterJurusan" onchange="window.applyFilters()" class="px-4 py-2.5 clay-input text-xs font-semibold text-slate-700">
+                        <option value="">Semua Jurusan</option>
+                        <option value="Pemasaran">Pemasaran</option>
+                        <option value="AKL">AKL</option>
+                        <option value="MPLB">MPLB</option>
+                        <option value="TJKT">TJKT</option>
+                        <option value="PPLG">PPLG</option>
+                        <option value="ULW">ULW</option>
+                    </select>
+
+                    <select id="filterSesi" onchange="window.applyFilters()" class="px-4 py-2.5 clay-input text-xs font-semibold text-slate-700">
+                        <option value="">Semua Sesi</option>
+                        <option value="Sesi 1">Sesi 1</option>
+                        <option value="Sesi 2">Sesi 2</option>
+                    </select>
+                </div>
+
+                <!-- Data Table -->
+                <div class="overflow-x-auto rounded-2xl border border-slate-100">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-[11px] uppercase font-bold text-slate-500 tracking-wider">
+                                <th class="p-4">No</th>
+                                <th class="p-4">Siswa</th>
+                                <th class="p-4">Jurusan / Kelas</th>
+                                <th class="p-4">Labor & Sesi</th>
+                                <th class="p-4">Nama Tes Non-Hadir</th>
+                                <th class="p-4">Alasan</th>
+                                <th class="p-4 text-center">Aksi (Admin)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rekapTableBody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                            <tr>
+                                <td colspan="7" class="p-8 text-center text-slate-400">Sedang memuat data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
+    <nav class="lg:hidden fixed bottom-4 left-4 right-4 z-40 bg-white/90 backdrop-blur-lg clay-card p-2 flex justify-around items-center border border-white">
+        <button onclick="window.switchTab('formTab')" id="mob-formTab" class="mob-btn flex flex-col items-center py-1.5 px-4 rounded-xl text-brand-600 bg-brand-50 font-bold">
+            <i class="fa-solid fa-pen-to-square text-base mb-1"></i>
+            <span class="text-[10px]">Form Input</span>
+        </button>
+        <button onclick="window.switchTab('overviewTab')" id="mob-overviewTab" class="mob-btn flex flex-col items-center py-1.5 px-4 rounded-xl text-slate-400 font-semibold">
+            <i class="fa-solid fa-chart-pie text-base mb-1"></i>
+            <span class="text-[10px]">Overview</span>
+        </button>
+        <button onclick="window.switchTab('rekapTab')" id="mob-rekapTab" class="mob-btn flex flex-col items-center py-1.5 px-4 rounded-xl text-slate-400 font-semibold">
+            <i class="fa-solid fa-table-list text-base mb-1"></i>
+            <span class="text-[10px]">Data Rekap</span>
+        </button>
     </nav>
 
-    <!-- Footer Sidebar Info -->
-    <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
-      <div class="flex items-center space-x-2 text-xs font-semibold text-slate-500">
-        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span id="statusMode">System Ready</span>
-      </div>
-      <p class="text-xs text-slate-400">TKA Attendance Dashboard v1.0</p>
-    </div>
-  </aside>
-
-  <!-- MOBILE BOTTOM NAVIGATION (Visible only on mobile screens) -->
-  <div class="md:hidden fixed bottom-0 left-0 right-0 glass-bottom-nav z-40 px-4 py-2 flex justify-around items-center">
-    <button onclick="switchTab('dashboard')" id="mobile-nav-dashboard" class="mobile-nav-btn flex flex-col items-center p-2 rounded-lg text-sky-600 font-medium text-xs space-y-1">
-      <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-      <span>Dashboard</span>
-    </button>
-
-    <button onclick="switchTab('input')" id="mobile-nav-input" class="mobile-nav-btn flex flex-col items-center p-2 rounded-lg text-slate-500 font-medium text-xs space-y-1">
-      <i data-lucide="user-plus" class="w-5 h-5"></i>
-      <span>Input</span>
-    </button>
-
-    <button onclick="switchTab('rekap')" id="mobile-nav-rekap" class="mobile-nav-btn flex flex-col items-center p-2 rounded-lg text-slate-500 font-medium text-xs space-y-1">
-      <i data-lucide="table" class="w-5 h-5"></i>
-      <span>Rekap Data</span>
-    </button>
-  </div>
-
-  <!-- MAIN CONTENT AREA -->
-  <main class="flex-1 p-4 sm:p-6 lg:p-8 mb-16 md:mb-0 max-w-7xl mx-auto w-full">
-
-    <!-- TOP HEADER BAR -->
-    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-      <div>
-        <h2 id="pageTitle" class="text-2xl font-bold text-slate-900 tracking-tight">Dashboard Analitik</h2>
-        <p id="pageSubtitle" class="text-sm text-slate-500 mt-1">Ringkasan statistik real-time ketidakhadiran Peserta TKA</p>
-      </div>
-      <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
-        <button onclick="manualRefresh()" class="flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm transition-all">
-          <i data-lucide="refresh-cw" class="w-4 h-4 text-slate-500"></i>
-          <span>Muat Ulang</span>
-        </button>
-      </div>
-    </header>
-
-    <!-- SECTION 1: DASHBOARD -->
-    <section id="tab-dashboard" class="space-y-6">
-      <!-- METRIC CARDS -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <!-- Card 1 -->
-        <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100">
-          <div class="flex justify-between items-start">
-            <div>
-              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Tidak Hadir</p>
-              <h3 id="statTotal" class="text-3xl font-extrabold text-slate-900 mt-2">0</h3>
-            </div>
-            <div class="p-3 bg-sky-50 text-sky-600 rounded-xl">
-              <i data-lucide="users" class="w-6 h-6"></i>
-            </div>
-          </div>
-          <p class="text-xs text-slate-500 mt-3 flex items-center">
-            <span class="text-slate-400 font-medium">Akumulasi peserta</span>
-          </p>
-        </div>
-
-        <!-- Card 2 -->
-        <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100">
-          <div class="flex justify-between items-start">
-            <div>
-              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sakit / Izin</p>
-              <h3 id="statSakitIzin" class="text-3xl font-extrabold text-amber-600 mt-2">0</h3>
-            </div>
-            <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
-              <i data-lucide="file-text" class="w-6 h-6"></i>
-            </div>
-          </div>
-          <p class="text-xs text-slate-500 mt-3">Dengan surat/keterangan resmi</p>
-        </div>
-
-        <!-- Card 3 -->
-        <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100">
-          <div class="flex justify-between items-start">
-            <div>
-              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanpa Keterangan</p>
-              <h3 id="statTK" class="text-3xl font-extrabold text-rose-600 mt-2">0</h3>
-            </div>
-            <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
-              <i data-lucide="user-x" class="w-6 h-6"></i>
-            </div>
-          </div>
-          <p class="text-xs text-slate-500 mt-3">Absen tanpa berita</p>
-        </div>
-
-        <!-- Card 4 -->
-        <div class="glass-card p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-100">
-          <div class="flex justify-between items-start">
-            <div>
-              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sesi-1 vs Sesi-2</p>
-              <h3 id="statSesiRatio" class="text-2xl font-extrabold text-slate-900 mt-2">0 / 0</h3>
-            </div>
-            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-              <i data-lucide="clock" class="w-6 h-6"></i>
-            </div>
-          </div>
-          <p class="text-xs text-slate-500 mt-3">Perbandingan jumlah per sesi</p>
-        </div>
-      </div>
-
-      <!-- CHARTS SECTION -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Chart 1: Alasan Ketidakhadiran -->
-        <div class="glass-card p-6 rounded-2xl border border-slate-100">
-          <h4 class="font-bold text-slate-800 text-base mb-4 flex items-center space-x-2">
-            <i data-lucide="pie-chart" class="w-5 h-5 text-sky-600"></i>
-            <span>Distribusi Alasan Ketidakhadiran</span>
-          </h4>
-          <div class="h-64 flex items-center justify-center">
-            <canvas id="chartAlasan"></canvas>
-          </div>
-        </div>
-
-        <!-- Chart 2: Per Program Keahlian -->
-        <div class="glass-card p-6 rounded-2xl border border-slate-100">
-          <h4 class="font-bold text-slate-800 text-base mb-4 flex items-center space-x-2">
-            <i data-lucide="bar-chart-2" class="w-5 h-5 text-sky-600"></i>
-            <span>Ketidakhadiran per Program Keahlian</span>
-          </h4>
-          <div class="h-64">
-            <canvas id="chartJurusan"></canvas>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 2: INPUT FORM -->
-    <section id="tab-input" class="hidden">
-      <div class="max-w-3xl mx-auto glass-card p-6 sm:p-8 rounded-2xl border border-slate-100 shadow-sm">
-        <div class="mb-6 pb-4 border-b border-slate-100">
-          <h3 class="text-lg font-bold text-slate-800">Formulir Catat Ketidakhadiran Peserta</h3>
-          <p class="text-xs text-slate-500">Lengkapi data di bawah ini untuk mencatat ketidakhadiran peserta TKA.</p>
-        </div>
-
-        <form id="formAbsensi" onsubmit="handleFormSubmit(event)" class="space-y-5">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <!-- Username -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Username / NISN <span class="text-rose-500">*</span></label>
-              <input type="text" id="username" required placeholder="Contoh: 005432198" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white/70">
-            </div>
-
-            <!-- Nama Lengkap -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nama Lengkap <span class="text-rose-500">*</span></label>
-              <input type="text" id="namaLengkap" required placeholder="Contoh: Ahmad Subagja" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white/70">
-            </div>
-
-            <!-- Program Keahlian -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Program Keahlian <span class="text-rose-500">*</span></label>
-              <input type="text" id="programKeahlian" required placeholder="Contoh: Teknik Komputer & Jaringan" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white/70">
-            </div>
-
-            <!-- Kelas -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Kelas <span class="text-rose-500">*</span></label>
-              <input type="text" id="kelas" required placeholder="Contoh: XII TKJ 1" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white/70">
-            </div>
-
-            <!-- Nama Labor -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nama Labor / Ruang <span class="text-rose-500">*</span></label>
-              <input type="text" id="namaLabor" required placeholder="Contoh: Lab Komputer 02" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white/70">
-            </div>
-
-            <!-- Sesi -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Sesi Ujian <span class="text-rose-500">*</span></label>
-              <select id="sesi" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white">
-                <option value="">-- Pilih Sesi --</option>
-                <option value="Sesi-1">Sesi-1</option>
-                <option value="Sesi-2">Sesi-2</option>
-              </select>
-            </div>
-
-            <!-- Mata Uji -->
-            <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Mata Uji <span class="text-rose-500">*</span></label>
-              <select id="mataUji" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white">
-                <option value="">-- Pilih Mata Uji --</option>
-                <option value="Bahasa Indonesia dan Literasi">Bahasa Indonesia dan Literasi</option>
-                <option value="Bahasa Inggris dan Sulingjar">Bahasa Inggris dan Sulingjar</option>
-                <option value="Matematika dan Numerasi">Matematika dan Numerasi</option>
-                <option value="2 Mapel Pilihan">2 Mapel Pilihan</option>
-              </select>
-            </div>
-
-            <!-- Alasan Tidak Hadir -->
-            <div class="sm:col-span-2">
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Alasan Tidak Hadir <span class="text-rose-500">*</span></label>
-              <select id="alasan" required onchange="toggleAlasanLainnya(this.value)" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white">
-                <option value="">-- Pilih Alasan --</option>
-                <option value="Sakit">Sakit</option>
-                <option value="Izin">Izin</option>
-                <option value="Tanpa Keterangan">Tanpa Keterangan</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
-            </div>
-
-            <!-- Input Alasan Lainnya (Conditional) -->
-            <div id="wrapperAlasanLainnya" class="sm:col-span-2 hidden">
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Detail Alasan Lainnya</label>
-              <input type="text" id="keteranganLain" placeholder="Tuliskan alasan spesifik..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm bg-white/70">
-            </div>
-          </div>
-
-          <div class="pt-4 flex justify-end space-x-3">
-            <button type="button" onclick="document.getElementById('formAbsensi').reset()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium text-sm transition-all">
-              Reset
+    <!-- MODAL LOGIN ADMIN -->
+    <div id="loginModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="clay-card p-6 lg:p-8 w-full max-w-md bg-white relative">
+            <button onclick="window.closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100">
+                <i class="fa-solid fa-xmark"></i>
             </button>
-            <button type="submit" id="btnSubmit" class="px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm shadow-md shadow-sky-500/20 transition-all flex items-center space-x-2">
-              <i data-lucide="send" class="w-4 h-4"></i>
-              <span>Simpan Data</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </section>
 
-    <!-- SECTION 3: REKAP TABLE & EXPORT -->
-    <section id="tab-rekap" class="hidden space-y-4">
-      <!-- CONTROL BAR & FILTERS -->
-      <div class="glass-card p-4 rounded-2xl border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
-        <!-- Search Input -->
-        <div class="relative w-full md:w-72">
-          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
-          <input type="text" id="searchInput" onkeyup="applyFilterAndSearch()" placeholder="Cari nama, NISN, labor..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 clay-card-subtle mx-auto mb-3 flex items-center justify-center text-brand-600 text-xl font-extrabold">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h3 class="text-lg font-extrabold text-slate-800">Login Admin TKA</h3>
+                <p class="text-xs text-slate-400 mt-1">Akses khusus pengelolaan data dan verifikasi.</p>
+            </div>
+
+            <form id="adminLoginForm" onsubmit="window.handleAdminLogin(event)" class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-700">Email Admin</label>
+                    <input type="email" id="adminEmail" required placeholder="admin@smkn2padang.sch.id" class="w-full px-4 py-3 clay-input text-xs font-medium">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-700">Password</label>
+                    <input type="password" id="adminPassword" required placeholder="••••••••" class="w-full px-4 py-3 clay-input text-xs font-medium">
+                </div>
+                <button type="submit" id="btnLoginSubmit" class="w-full py-3.5 clay-button-primary text-xs uppercase tracking-wider font-bold mt-2">
+                    Masuk Mode Admin
+                </button>
+            </form>
         </div>
-
-        <!-- Filters -->
-        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <select id="filterSesi" onchange="applyFilterAndSearch()" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium bg-white focus:outline-none">
-            <option value="">Semua Sesi</option>
-            <option value="Sesi-1">Sesi-1</option>
-            <option value="Sesi-2">Sesi-2</option>
-          </select>
-
-          <select id="filterAlasan" onchange="applyFilterAndSearch()" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium bg-white focus:outline-none">
-            <option value="">Semua Alasan</option>
-            <option value="Sakit">Sakit</option>
-            <option value="Izin">Izin</option>
-            <option value="Tanpa Keterangan">Tanpa Keterangan</option>
-            <option value="Lainnya">Lainnya</option>
-          </select>
-
-          <!-- Export Buttons -->
-          <button onclick="exportToXLSX()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center space-x-1.5 shadow-sm transition-all">
-            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
-            <span>Export Excel (.xlsx)</span>
-          </button>
-          <button onclick="exportToCSV()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all">
-            <i data-lucide="download" class="w-3.5 h-3.5"></i>
-            <span>CSV</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- TABLE CONTAINER -->
-      <div class="glass-card rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs sm:text-sm">
-            <thead class="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-100">
-              <tr>
-                <th class="py-3.5 px-4">No</th>
-                <th class="py-3.5 px-4">Peserta</th>
-                <th class="py-3.5 px-4">Program / Kelas</th>
-                <th class="py-3.5 px-4">Labor</th>
-                <th class="py-3.5 px-4">Sesi & Mata Uji</th>
-                <th class="py-3.5 px-4">Alasan</th>
-                <th class="py-3.5 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="rekapTableBody" class="divide-y divide-slate-100 text-slate-700">
-              <!-- Rendered dynamically -->
-              <tr>
-                <td colspan="7" class="py-8 text-center text-slate-400">
-                  <div class="flex flex-col items-center justify-center space-y-2">
-                    <i data-lucide="inbox" class="w-8 h-8 text-slate-300"></i>
-                    <span>Memuat data...</span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Table Footer Info -->
-        <div class="p-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center text-xs text-slate-500">
-          <span id="recordCountInfo">Menampilkan 0 data</span>
-          <span>Platform Rekap TKA</span>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- DELETE CONFIRMATION MODAL -->
-  <div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-slate-100">
-      <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
-        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
-      </div>
-      <div class="text-center">
-        <h3 class="text-base font-bold text-slate-900">Hapus Record</h3>
-        <p class="text-xs text-slate-500 mt-1">Apakah Anda yakin ingin menghapus data ketidakhadiran ini?</p>
-      </div>
-      <div class="flex space-x-3 pt-2">
-        <button onclick="closeDeleteModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-all">
-          Batal
-        </button>
-        <button id="confirmDeleteBtn" onclick="executeDelete()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-md transition-all">
-          Hapus
-        </button>
-      </div>
     </div>
-  </div>
 
-  <!-- JAVASCRIPT LOGIC & FIREBASE INTEGRATION -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-      getFirestore, 
-      collection, 
-      addDoc, 
-      deleteDoc, 
-      doc, 
-      onSnapshot, 
-      getDocs, 
-      serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <!-- GLOBAL UI HANDLERS SETUP -->
+    <script>
+        // Global UI navigation & modal methods defined early
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId)?.classList.remove('hidden');
 
-    // -------------------------------------------------------------
-    // KONFIGURASI FIREBASE & PREVIEW SWITCH
-    // -------------------------------------------------------------
-    const IS_PREVIEW = false; // Set false jika siap digunakan di Blogger/Production
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDqKXFamYhpiEI5AMhV_NzLHZXSWw1ROz8",
-      authDomain: "abstein-tka-fa7bf.firebaseapp.com",
-      projectId: "abstein-tka-fa7bf",
-      storageBucket: "abstein-tka-fa7bf.firebasestorage.app",
-      messagingSenderId: "182529379354",
-      appId: "1:182529379354:web:10ce71ebe38aa8124b55a3"
-    };
-
-    // Application state
-    let db = null;
-    let auth = null;
-    let globalAbsensiData = [];
-    let pendingDeleteId = null;
-    let chartAlasanInstance = null;
-    let chartJurusanInstance = null;
-
-    // Get standard App ID
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'rekap-tka-app';
-
-    // Dummy seed data for auto setup
-    const DUMMY_DATA = [
-      {
-        username: "2024001",
-        namaLengkap: "Budi Santoso",
-        programKeahlian: "Teknik Komputer & Jaringan",
-        kelas: "XII TKJ 1",
-        namaLabor: "Lab Komp 01",
-        sesi: "Sesi-1",
-        mataUji: "Bahasa Indonesia dan Literasi",
-        alasan: "Sakit",
-        keteranganLain: "",
-        createdAt: new Date()
-      },
-      {
-        username: "2024002",
-        namaLengkap: "Siti Rahmawati",
-        programKeahlian: "Rekayasa Perangkat Lunak",
-        kelas: "XII RPL 2",
-        namaLabor: "Lab Komp 03",
-        sesi: "Sesi-1",
-        mataUji: "Bahasa Indonesia dan Literasi",
-        alasan: "Izin",
-        keteranganLain: "Mengikuti Lomba LKS",
-        createdAt: new Date()
-      },
-      {
-        username: "2024003",
-        namaLengkap: "Doni Prasetyo",
-        programKeahlian: "Teknik Sepeda Motor",
-        kelas: "XII TSM 1",
-        namaLabor: "Lab Komp 02",
-        sesi: "Sesi-2",
-        mataUji: "Matematika dan Numerasi",
-        alasan: "Tanpa Keterangan",
-        keteranganLain: "",
-        createdAt: new Date()
-      }
-    ];
-
-    // Helper to escape HTML characters safely
-    function escapeHtml(str) {
-      if (typeof str !== 'string') return str;
-      return str.replace(/[&<>"']/g, function(m) {
-        return {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#039;'
-        }[m];
-      });
-    }
-
-    // PWA Service Worker dynamic registration via Blob
-    function initPWA() {
-      const manifest = {
-        name: "Rekap Ketidakhadiran TKA",
-        short_name: "RekapTKA",
-        start_url: ".",
-        display: "standalone",
-        background_color: "#ffffff",
-        theme_color: "#0284c7"
-      };
-      const stringManifest = JSON.stringify(manifest);
-      const blobManifest = new Blob([stringManifest], { type: 'application/json' });
-      const manifestURL = URL.createObjectURL(blobManifest);
-
-      let link = document.createElement('link');
-      link.rel = 'manifest';
-      link.href = manifestURL;
-      document.head.appendChild(link);
-
-      if ('serviceWorker' in navigator) {
-        const swCode = `
-          self.addEventListener('install', (e) => self.skipWaiting());
-          self.addEventListener('activate', (e) => self.clients.claim());
-          self.addEventListener('fetch', (e) => {});
-        `;
-        const blobSW = new Blob([swCode], { type: 'application/javascript' });
-        const swURL = URL.createObjectURL(blobSW);
-        navigator.serviceWorker.register(swURL).catch(err => console.log('SW Registration failed:', err));
-      }
-    }
-
-    // Helper for Toast Notifications
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      
-      let bg = 'bg-slate-800 text-white';
-      if (type === 'success') bg = 'bg-emerald-600 text-white';
-      if (type === 'error') bg = 'bg-rose-600 text-white';
-
-      toast.className = `${bg} px-4 py-3 rounded-xl shadow-lg text-xs font-medium transition-all transform duration-300 pointer-events-auto flex items-center space-x-2`;
-      toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
-
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    }
-
-    // Initialize application on load
-    window.addEventListener('DOMContentLoaded', async () => {
-      // Initialize icons
-      lucide.createIcons();
-
-      // Register PWA Service Worker
-      initPWA();
-
-      // Setup Database & App Mode
-      if (!IS_PREVIEW && firebaseConfig.apiKey !== "API_KEY_ANDA") {
-        try {
-          const app = initializeApp(firebaseConfig);
-          auth = getAuth(app);
-          db = getFirestore(app);
-
-          // Authenticate anonymously for public access
-          await signInAnonymously(auth);
-          document.getElementById('statusMode').innerText = "Live Database Mode";
-          
-          // Auto Setup Database
-          await autoSetupDatabase();
-
-          // Listen real-time data
-          listenRealtimeData();
-        } catch (error) {
-          console.error("Firebase Init Error:", error);
-          showToast("Gagal koneksi ke Firebase, beralih ke local storage mode.", "error");
-          loadLocalFallback();
-        }
-      } else {
-        document.getElementById('statusMode').innerText = "Demo / Local Mode";
-        loadLocalFallback();
-      }
-    });
-
-    // -------------------------------------------------------------
-    // DATABASE & AUTO SETUP
-    // -------------------------------------------------------------
-    async function autoSetupDatabase() {
-      if (!db) return;
-      try {
-        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'absensi_tka');
-        const snapshot = await getDocs(colRef);
-        
-        if (snapshot.empty) {
-          console.log("Database kosong, menyuntikkan data dummy awal...");
-          for (const item of DUMMY_DATA) {
-            await addDoc(colRef, {
-              ...item,
-              createdAt: serverTimestamp()
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-2xl font-semibold text-sm text-slate-500 hover:bg-slate-50 transition-all";
             });
-          }
-          showToast("Database berhasil di-setup otomatis dengan data awal!", "success");
-        }
-      } catch (err) {
-        console.error("Auto Setup Failed:", err);
-      }
-    }
+            const activeNav = document.getElementById('nav-' + tabId);
+            if (activeNav) {
+                activeNav.className = "nav-btn w-full flex items-center space-x-3 px-4 py-3.5 rounded-2xl font-bold text-sm text-brand-600 bg-brand-50 clay-badge transition-all";
+            }
 
-    function listenRealtimeData() {
-      if (!db) return;
-      const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'absensi_tka');
-      onSnapshot(colRef, (snapshot) => {
-        globalAbsensiData = [];
-        snapshot.forEach((doc) => {
-          globalAbsensiData.push({
-            id: doc.id,
-            ...doc.data()
-          });
+            document.querySelectorAll('.mob-btn').forEach(btn => {
+                btn.className = "mob-btn flex flex-col items-center py-1.5 px-4 rounded-xl text-slate-400 font-semibold";
+            });
+            const activeMob = document.getElementById('mob-' + tabId);
+            if (activeMob) {
+                activeMob.className = "mob-btn flex flex-col items-center py-1.5 px-4 rounded-xl text-brand-600 bg-brand-50 font-bold";
+            }
+        };
+
+        window.toggleLainnyaInput = function(show) {
+            const container = document.getElementById('containerLainnya');
+            if (show) {
+                container?.classList.remove('hidden');
+                const inp = document.getElementById('alasan_lainnya_text');
+                if (inp) inp.required = true;
+            } else {
+                container?.classList.add('hidden');
+                const inp = document.getElementById('alasan_lainnya_text');
+                if (inp) inp.required = false;
+            }
+        };
+
+        window.openLoginModal = function() {
+            document.getElementById('loginModal')?.classList.remove('hidden');
+        };
+
+        window.closeLoginModal = function() {
+            document.getElementById('loginModal')?.classList.add('hidden');
+        };
+    </script>
+
+    <!-- FIREBASE MODULE & APPLICATION SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // CONFIG SAKLAR DEPLOYMENT & FIREBASE CONFIG
+        const IS_PREVIEW = true; // Set false jika sudah deploy penuh
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyDogDNL30gbwl4e0N_POH7FNMjyl_HphAs",
+          authDomain: "tka-absen.firebaseapp.com",
+          projectId: "tka-absen",
+          storageBucket: "tka-absen.firebasestorage.app",
+          messagingSenderId: "776789266364",
+          appId: "1:776789266364:web:b8d68b32edcb7542ab25b9"
+        };
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tka-smkn2-padang';
+        let db, auth;
+        let allRekapData = [];
+        let currentUser = null;
+
+        try {
+            const configToUse = (typeof __firebase_config !== 'undefined') ? JSON.parse(__firebase_config) : firebaseConfig;
+            const app = initializeApp(configToUse);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } catch (e) {
+            console.warn("Firebase initialization standby mode:", e);
+        }
+
+        async function autoSetupDatabase() {
+            if (!db) return;
+            try {
+                // Primary collection path
+                const colRef = collection(db, 'rekap_ketidakhadiran');
+                const snapshot = await getDocs(colRef);
+                if (snapshot.empty) {
+                    const dummyRecords = [
+                        {
+                            username_tka: "TKA2026001",
+                            nama_lengkap: "Ahmad Fauzi",
+                            program_keahlian: "PPLG",
+                            kelas: "XII PPLG 1",
+                            nama_labor: "Lab Komputer 1",
+                            sesi: "Sesi 1",
+                            nama_tes: ["Bahasa Indonesia dan Literasi", "Matematika dan Numerasi"],
+                            alasan: "Sakit",
+                            alasan_detail: "Demam tinggi",
+                            timestamp: new Date()
+                        },
+                        {
+                            username_tka: "TKA2026002",
+                            nama_lengkap: "Siti Rahma",
+                            program_keahlian: "AKL",
+                            kelas: "XII AKL 2",
+                            nama_labor: "Lab Akuntansi",
+                            sesi: "Sesi 2",
+                            nama_tes: ["Bahasa Inggris dan Sulingjar"],
+                            alasan: "Izin",
+                            alasan_detail: "Acara keluarga",
+                            timestamp: new Date()
+                        }
+                    ];
+                    for (const item of dummyRecords) {
+                        await addDoc(colRef, item);
+                    }
+                }
+            } catch (err) {
+                console.warn("Auto setup skipped or requires permission update in Firebase Console:", err.message);
+            }
+        }
+
+        function initRealtimeListener() {
+            if (!db) return;
+            const colRef = collection(db, 'rekap_ketidakhadiran');
+            
+            onSnapshot(colRef, (snapshot) => {
+                allRekapData = [];
+                snapshot.forEach(docSnap => {
+                    allRekapData.push({
+                        id: docSnap.id,
+                        ...docSnap.data()
+                    });
+                });
+                renderTable(allRekapData);
+                renderOverviewStats(allRekapData);
+            }, (error) => {
+                console.warn("Realtime listener notice:", error.message);
+                if (allRekapData.length === 0) {
+                    renderTable([]);
+                    renderOverviewStats([]);
+                }
+            });
+        }
+
+        if (auth) {
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                updateAuthUI(user);
+            });
+        }
+
+        function updateAuthUI(user) {
+            const badge = document.getElementById('badgeAccessStatus');
+            const btn = document.getElementById('adminAuthBtn');
+            const mobBtn = document.getElementById('adminMobileAuthBtn');
+
+            if (user) {
+                if(badge) badge.innerHTML = `<i class="fa-solid fa-user-check text-emerald-500 mr-1"></i> Admin (${user.email.split('@')[0]})`;
+                if(btn) {
+                    btn.innerHTML = `<i class="fa-solid fa-right-from-bracket mr-1"></i> Logout Admin`;
+                    btn.onclick = handleLogout;
+                }
+                if(mobBtn) {
+                    mobBtn.innerHTML = `<i class="fa-solid fa-user-check text-emerald-500 mr-1"></i> Admin`;
+                    mobBtn.onclick = handleLogout;
+                }
+            } else {
+                if(badge) badge.innerHTML = `<i class="fa-solid fa-user text-slate-400 mr-1"></i> Mode Publik`;
+                if(btn) {
+                    btn.innerHTML = `<i class="fa-solid fa-right-to-bracket mr-1"></i> Login Admin`;
+                    btn.onclick = window.openLoginModal;
+                }
+                if(mobBtn) {
+                    mobBtn.innerHTML = `<i class="fa-solid fa-lock mr-1"></i> Admin`;
+                    mobBtn.onclick = window.openLoginModal;
+                }
+            }
+            renderTable(allRekapData);
+        }
+
+        window.handleFormSubmit = async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitForm');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Mengirim Data...</span>`;
+
+            try {
+                const username_tka = document.getElementById('username_tka').value.trim();
+                const nama_lengkap = document.getElementById('nama_lengkap').value.trim();
+                const program_keahlian = document.getElementById('program_keahlian').value;
+                const kelas = document.getElementById('kelas').value.trim();
+                const nama_labor = document.getElementById('nama_labor').value.trim();
+                const sesi = document.querySelector('input[name="sesi"]:checked')?.value;
+                
+                const namaTesChecked = [];
+                document.querySelectorAll('input[name="nama_tes"]:checked').forEach(cb => {
+                    namaTesChecked.push(cb.value);
+                });
+
+                if (namaTesChecked.length === 0) {
+                    showToast("Pilih minimal 1 Nama Tes yang tidak diikuti!", "error");
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> <span>Kirim Rekap Ketidakhadiran</span>`;
+                    return;
+                }
+
+                const alasan = document.querySelector('input[name="alasan"]:checked')?.value;
+                const alasan_detail = alasan === 'Lainnya' ? document.getElementById('alasan_lainnya_text').value.trim() : '';
+
+                const recordData = {
+                    username_tka,
+                    nama_lengkap,
+                    program_keahlian,
+                    kelas,
+                    nama_labor,
+                    sesi,
+                    nama_tes: namaTesChecked,
+                    alasan,
+                    alasan_detail,
+                    timestamp: new Date()
+                };
+
+                if (db) {
+                    const colRef = collection(db, 'rekap_ketidakhadiran');
+                    await addDoc(colRef, recordData);
+                } else {
+                    allRekapData.push({ id: 'local_' + Date.now(), ...recordData });
+                    renderTable(allRekapData);
+                    renderOverviewStats(allRekapData);
+                }
+
+                showToast("Data ketidakhadiran berhasil tersimpan!", "success");
+                document.getElementById('presenceForm').reset();
+                window.toggleLainnyaInput(false);
+
+            } catch (err) {
+                showToast("Terjadi kesalahan: " + err.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> <span>Kirim Rekap Ketidakhadiran</span>`;
+            }
+        };
+
+        function renderTable(data) {
+            const tbody = document.getElementById('rekapTableBody');
+            if (!tbody) return;
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">Belum ada data rekap ketidakhadiran tersimpan.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map((item, index) => {
+                const tesList = Array.isArray(item.nama_tes) ? item.nama_tes.join(', ') : item.nama_tes;
+                const isAdmin = !!currentUser;
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-4 font-bold text-slate-400">${index + 1}</td>
+                        <td class="p-4">
+                            <div class="font-bold text-slate-800">${escapeHtml(item.nama_lengkap)}</div>
+                            <div class="text-[11px] text-slate-400">ID: ${escapeHtml(item.username_tka)}</div>
+                        </td>
+                        <td class="p-4">
+                            <span class="inline-block px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-brand-50 text-brand-600 mb-1">
+                                ${escapeHtml(item.program_keahlian)}
+                            </span>
+                            <div class="text-slate-600 font-semibold">${escapeHtml(item.kelas)}</div>
+                        </td>
+                        <td class="p-4">
+                            <div class="font-semibold text-slate-700">${escapeHtml(item.nama_labor)}</div>
+                            <div class="text-[11px] text-slate-400">${escapeHtml(item.sesi)}</div>
+                        </td>
+                        <td class="p-4 max-w-xs">
+                            <div class="text-xs text-slate-700 font-medium leading-relaxed">${escapeHtml(tesList)}</div>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold ${getAlasanBadgeClass(item.alasan)}">
+                                ${escapeHtml(item.alasan)}
+                            </span>
+                            ${item.alasan_detail ? `<div class="text-[10px] text-slate-400 mt-1 italic">${escapeHtml(item.alasan_detail)}</div>` : ''}
+                        </td>
+                        <td class="p-4 text-center">
+                            ${isAdmin ? `
+                                <button onclick="window.deleteRecord('${item.id}')" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold transition">
+                                    <i class="fa-solid fa-trash-can mr-1"></i> Hapus
+                                </button>
+                            ` : `<span class="text-[10px] text-slate-300 italic">Perlu Login Admin</span>`}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderOverviewStats(data) {
+            const statTotalAbsen = document.getElementById('statTotalAbsen');
+            const statSakitIzin = document.getElementById('statSakitIzin');
+            const statKendala = document.getElementById('statKendala');
+            const statTopJurusan = document.getElementById('statTopJurusan');
+
+            if (!statTotalAbsen) return;
+
+            const total = data.length;
+            const sakitIzin = data.filter(d => d.alasan === 'Sakit' || d.alasan === 'Izin').length;
+            const kendala = data.filter(d => d.alasan === 'Kendala Teknis').length;
+
+            const jurusanMap = {};
+            data.forEach(d => {
+                if (d.program_keahlian) {
+                    jurusanMap[d.program_keahlian] = (jurusanMap[d.program_keahlian] || 0) + 1;
+                }
+            });
+
+            let topJur = '-';
+            let maxCount = 0;
+            for (const [jur, count] of Object.entries(jurusanMap)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    topJur = jur;
+                }
+            }
+
+            statTotalAbsen.innerText = total;
+            statSakitIzin.innerText = sakitIzin;
+            statKendala.innerText = kendala;
+            statTopJurusan.innerText = topJur !== '-' ? `${topJur} (${maxCount})` : '-';
+
+            const listJur = document.getElementById('listStatsJurusan');
+            const allJur = ['Pemasaran', 'AKL', 'MPLB', 'TJKT', 'PPLG', 'ULW'];
+            listJur.innerHTML = allJur.map(j => {
+                const count = jurusanMap[j] || 0;
+                const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+                return `
+                    <div>
+                        <div class="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                            <span>${j}</span>
+                            <span>${count} Siswa (${percent}%)</span>
+                        </div>
+                        <div class="w-full h-2.5 clay-card-subtle overflow-hidden rounded-full">
+                            <div class="h-full bg-brand-500 rounded-full" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const sesi1 = data.filter(d => d.sesi === 'Sesi 1').length;
+            const sesi2 = data.filter(d => d.sesi === 'Sesi 2').length;
+            const listSesi = document.getElementById('listStatsSesi');
+            listSesi.innerHTML = `
+                <div class="p-4 clay-card-subtle flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-1 mr-2 text-brand-500"></i> Sesi 1</span>
+                    <span class="text-sm font-extrabold text-slate-800">${sesi1} Siswa</span>
+                </div>
+                <div class="p-4 clay-card-subtle flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-700"><i class="fa-solid fa-2 mr-2 text-brand-500"></i> Sesi 2</span>
+                    <span class="text-sm font-extrabold text-slate-800">${sesi2} Siswa</span>
+                </div>
+            `;
+        }
+
+        window.exportToXLSX = function() {
+            if (allRekapData.length === 0) {
+                showToast("Tidak ada data untuk di-export!", "error");
+                return;
+            }
+
+            const excelRows = allRekapData.map((item, index) => ({
+                "No": index + 1,
+                "Username TKA": item.username_tka || '',
+                "Nama Lengkap": item.nama_lengkap || '',
+                "Program Keahlian": item.program_keahlian || '',
+                "Kelas": item.kelas || '',
+                "Laboratorium": item.nama_labor || '',
+                "Sesi Ujian": item.sesi || '',
+                "Daftar Tes Tidak Diikuti": Array.isArray(item.nama_tes) ? item.nama_tes.join('; ') : item.nama_tes || '',
+                "Alasan Ketidakhadiran": item.alasan || '',
+                "Detail Alasan": item.alasan_detail || '',
+                "Tanggal Input": item.timestamp ? new Date(item.timestamp.seconds ? item.timestamp.seconds * 1000 : item.timestamp).toLocaleString('id-ID') : ''
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(excelRows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Ketidakhadiran");
+
+            const max_width = excelRows.reduce((w, r) => Math.max(w, r["Nama Lengkap"].length), 10);
+            worksheet['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: max_width + 5 }, { wch: 18 }, { wch: 12 }, { wch: 15 }, { wch: 10 }, { wch: 40 }, { wch: 15 }, { wch: 20 }, { wch: 20 }];
+
+            XLSX.writeFile(workbook, `Rekap_Ketidakhadiran_TKA_SMKN2Padang_${new Date().toISOString().slice(0,10)}.xlsx`);
+            showToast("Berhasil mendownload file Excel!", "success");
+        };
+
+        window.deleteRecord = async function(id) {
+            if (!currentUser) {
+                showToast("Anda harus login sebagai Admin untuk menghapus!", "error");
+                return;
+            }
+            if (!confirm("Apakah Anda yakin ingin menghapus record data ini?")) return;
+
+            try {
+                if (db) {
+                    const docRef = doc(db, 'rekap_ketidakhadiran', id);
+                    await deleteDoc(docRef);
+                } else {
+                    allRekapData = allRekapData.filter(d => d.id !== id);
+                    renderTable(allRekapData);
+                    renderOverviewStats(allRekapData);
+                }
+                showToast("Data berhasil dihapus.", "success");
+            } catch (err) {
+                showToast("Gagal menghapus data: " + err.message, "error");
+            }
+        };
+
+        window.handleAdminLogin = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+
+            try {
+                if (auth) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    showToast("Login Admin Berhasil!", "success");
+                    window.closeLoginModal();
+                } else {
+                    currentUser = { email };
+                    updateAuthUI(currentUser);
+                    showToast("Login Admin Standby Mode Berhasil!", "success");
+                    window.closeLoginModal();
+                }
+            } catch (err) {
+                showToast("Gagal Login Admin: " + err.message, "error");
+            }
+        };
+
+        async function handleLogout() {
+            if (auth) {
+                await signOut(auth);
+            }
+            currentUser = null;
+            updateAuthUI(null);
+            showToast("Anda telah keluar dari Mode Admin.", "success");
+        }
+
+        window.applyFilters = function() {
+            const search = document.getElementById('searchKeyword').value.toLowerCase();
+            const jur = document.getElementById('filterJurusan').value;
+            const sesi = document.getElementById('filterSesi').value;
+
+            const filtered = allRekapData.filter(item => {
+                const matchSearch = !search || 
+                    (item.nama_lengkap && item.nama_lengkap.toLowerCase().includes(search)) ||
+                    (item.username_tka && item.username_tka.toLowerCase().includes(search)) ||
+                    (item.kelas && item.kelas.toLowerCase().includes(search));
+
+                const matchJur = !jur || item.program_keahlian === jur;
+                const matchSesi = !sesi || item.sesi === sesi;
+
+                return matchSearch && matchJur && matchSesi;
+            });
+
+            renderTable(filtered);
+        };
+
+        function showToast(message, type = "success") {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            const bgClass = type === "success" ? "bg-emerald-600" : "bg-rose-600";
+            const icon = type === "success" ? "fa-circle-check" : "fa-circle-exclamation";
+
+            toast.className = `${bgClass} text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-lg flex items-center space-x-2 pointer-events-auto transition transform duration-300 translate-y-2`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${escapeHtml(message)}</span>`;
+
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2'), 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function getAlasanBadgeClass(alasan) {
+            switch (alasan) {
+                case 'Sakit': return 'bg-amber-100 text-amber-700';
+                case 'Izin': return 'bg-blue-100 text-blue-700';
+                case 'Kendala Teknis': return 'bg-rose-100 text-rose-700';
+                default: return 'bg-slate-100 text-slate-700';
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateEl = document.getElementById('currentDateDisplay');
+            if (dateEl) dateEl.innerText = new Date().toLocaleDateString('id-ID', options);
+            
+            autoSetupDatabase();
+            initRealtimeListener();
         });
-        updateUI();
-      }, (error) => {
-        console.error("Firestore Listen Error:", error);
-        showToast("Error saat membaca data real-time.", "error");
-      });
-    }
-
-    function loadLocalFallback() {
-      const stored = localStorage.getItem('tka_absensi_demo_data');
-      if (stored) {
-        globalAbsensiData = JSON.parse(stored);
-      } else {
-        globalAbsensiData = DUMMY_DATA.map((item, index) => ({ id: 'demo-' + index, ...item }));
-        saveLocalData();
-      }
-      updateUI();
-    }
-
-    function saveLocalData() {
-      localStorage.setItem('tka_absensi_demo_data', JSON.stringify(globalAbsensiData));
-    }
-
-    // -------------------------------------------------------------
-    // UI UPDATES & CHARTS
-    // -------------------------------------------------------------
-    function updateUI() {
-      renderTable(globalAbsensiData);
-      renderMetrics(globalAbsensiData);
-      renderCharts(globalAbsensiData);
-    }
-
-    function renderMetrics(data) {
-      const total = data.length;
-      const sakitIzin = data.filter(d => d.alasan === 'Sakit' || d.alasan === 'Izin').length;
-      const tk = data.filter(d => d.alasan === 'Tanpa Keterangan').length;
-      const sesi1 = data.filter(d => d.sesi === 'Sesi-1').length;
-      const sesi2 = data.filter(d => d.sesi === 'Sesi-2').length;
-
-      document.getElementById('statTotal').innerText = total;
-      document.getElementById('statSakitIzin').innerText = sakitIzin;
-      document.getElementById('statTK').innerText = tk;
-      document.getElementById('statSesiRatio').innerText = `${sesi1} / ${sesi2}`;
-    }
-
-    function renderCharts(data) {
-      // 1. Chart Alasan
-      const alasanCounts = { Sakit: 0, Izin: 0, 'Tanpa Keterangan': 0, Lainnya: 0 };
-      data.forEach(d => {
-        if (alasanCounts[d.alasan] !== undefined) alasanCounts[d.alasan]++;
-        else alasanCounts.Lainnya++;
-      });
-
-      const ctxAlasan = document.getElementById('chartAlasan').getContext('2d');
-      if (chartAlasanInstance) chartAlasanInstance.destroy();
-      
-      chartAlasanInstance = new Chart(ctxAlasan, {
-        type: 'doughnut',
-        data: {
-          labels: ['Sakit', 'Izin', 'Tanpa Keterangan', 'Lainnya'],
-          datasets: [{
-            data: Object.values(alasanCounts),
-            backgroundColor: ['#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom' }
-          }
-        }
-      });
-
-      // 2. Chart Program Keahlian
-      const jurusanMap = {};
-      data.forEach(d => {
-        const prog = d.programKeahlian || 'Lainnya';
-        jurusanMap[prog] = (jurusanMap[prog] || 0) + 1;
-      });
-
-      const ctxJurusan = document.getElementById('chartJurusan').getContext('2d');
-      if (chartJurusanInstance) chartJurusanInstance.destroy();
-
-      chartJurusanInstance = new Chart(ctxJurusan, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(jurusanMap),
-          datasets: [{
-            label: 'Jumlah Tidak Hadir',
-            data: Object.values(jurusanMap),
-            backgroundColor: '#0284c7',
-            borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { beginAtZero: true, ticks: { precision: 0 } }
-          },
-          plugins: {
-            legend: { display: false }
-          }
-        }
-      });
-    }
-
-    function renderTable(data) {
-      const tbody = document.getElementById('rekapTableBody');
-      tbody.innerHTML = '';
-
-      if (data.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="7" class="py-8 text-center text-slate-400">
-              Tidak ada data ketidakhadiran yang cocok.
-            </td>
-          </tr>
-        `;
-        document.getElementById('recordCountInfo').innerText = 'Menampilkan 0 data';
-        return;
-      }
-
-      data.forEach((item, index) => {
-        let badgeColor = 'bg-slate-100 text-slate-700';
-        if (item.alasan === 'Sakit') badgeColor = 'bg-amber-50 text-amber-700 border border-amber-200';
-        else if (item.alasan === 'Izin') badgeColor = 'bg-sky-50 text-sky-700 border border-sky-200';
-        else if (item.alasan === 'Tanpa Keterangan') badgeColor = 'bg-rose-50 text-rose-700 border border-rose-200';
-
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-50/80 transition-colors";
-        tr.innerHTML = `
-          <td class="py-3.5 px-4 font-medium text-slate-400">${index + 1}</td>
-          <td class="py-3.5 px-4">
-            <div class="font-bold text-slate-800">${escapeHtml(item.namaLengkap)}</div>
-            <div class="text-xs text-slate-400">NISN: ${escapeHtml(item.username)}</div>
-          </td>
-          <td class="py-3.5 px-4">
-            <div class="text-slate-800 font-medium">${escapeHtml(item.programKeahlian)}</div>
-            <div class="text-xs text-slate-500">${escapeHtml(item.kelas)}</div>
-          </td>
-          <td class="py-3.5 px-4 font-medium text-slate-700">
-            ${escapeHtml(item.namaLabor)}
-          </td>
-          <td class="py-3.5 px-4">
-            <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 mr-1">${escapeHtml(item.sesi)}</span>
-            <div class="text-xs text-slate-500 mt-1">${escapeHtml(item.mataUji)}</div>
-          </td>
-          <td class="py-3.5 px-4">
-            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${badgeColor}">
-              ${escapeHtml(item.alasan)}
-            </span>
-            ${item.keteranganLain ? `<div class="text-xs text-slate-400 mt-1 italic">${escapeHtml(item.keteranganLain)}</div>` : ''}
-          </td>
-          <td class="py-3.5 px-4 text-center">
-            <button onclick="promptDelete('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-all">
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById('recordCountInfo').innerText = `Menampilkan ${data.length} data`;
-      lucide.createIcons();
-    }
-
-    // -------------------------------------------------------------
-    // FORM & EVENT HANDLERS
-    // -------------------------------------------------------------
-    window.handleFormSubmit = async function(e) {
-      e.preventDefault();
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true;
-      btn.innerText = "Saving...";
-
-      const payload = {
-        username: document.getElementById('username').value.trim(),
-        namaLengkap: document.getElementById('namaLengkap').value.trim(),
-        programKeahlian: document.getElementById('programKeahlian').value.trim(),
-        kelas: document.getElementById('kelas').value.trim(),
-        namaLabor: document.getElementById('namaLabor').value.trim(),
-        sesi: document.getElementById('sesi').value,
-        mataUji: document.getElementById('mataUji').value,
-        alasan: document.getElementById('alasan').value,
-        keteranganLain: document.getElementById('keteranganLain').value.trim(),
-        createdAt: new Date()
-      };
-
-      try {
-        if (!IS_PREVIEW && db) {
-          const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'absensi_tka');
-          await addDoc(colRef, { ...payload, createdAt: serverTimestamp() });
-        } else {
-          payload.id = 'demo-' + Date.now();
-          globalAbsensiData.unshift(payload);
-          saveLocalData();
-          updateUI();
-        }
-
-        showToast("Data ketidakhadiran berhasil disimpan!", "success");
-        document.getElementById('formAbsensi').reset();
-        document.getElementById('wrapperAlasanLainnya').classList.add('hidden');
-        switchTab('rekap');
-      } catch (err) {
-        console.error("Save Error:", err);
-        showToast("Gagal menyimpan data.", "error");
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="send" class="w-4 h-4"></i><span>Simpan Data</span>`;
-        lucide.createIcons();
-      }
-    };
-
-    window.toggleAlasanLainnya = function(val) {
-      const wrapper = document.getElementById('wrapperAlasanLainnya');
-      if (val === 'Lainnya') {
-        wrapper.classList.remove('hidden');
-      } else {
-        wrapper.classList.add('hidden');
-      }
-    };
-
-    window.applyFilterAndSearch = function() {
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const sesi = document.getElementById('filterSesi').value;
-      const alasan = document.getElementById('filterAlasan').value;
-
-      const filtered = globalAbsensiData.filter(item => {
-        const matchSearch = item.namaLengkap.toLowerCase().includes(search) ||
-                            item.username.toLowerCase().includes(search) ||
-                            item.namaLabor.toLowerCase().includes(search) ||
-                            item.programKeahlian.toLowerCase().includes(search);
-        
-        const matchSesi = sesi === '' || item.sesi === sesi;
-        const matchAlasan = alasan === '' || item.alasan === alasan;
-
-        return matchSearch && matchSesi && matchAlasan;
-      });
-
-      renderTable(filtered);
-    };
-
-    window.promptDelete = function(id) {
-      pendingDeleteId = id;
-      document.getElementById('deleteModal').classList.remove('hidden');
-    };
-
-    window.closeDeleteModal = function() {
-      pendingDeleteId = null;
-      document.getElementById('deleteModal').classList.add('hidden');
-    };
-
-    window.executeDelete = async function() {
-      if (!pendingDeleteId) return;
-
-      try {
-        if (!IS_PREVIEW && db) {
-          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'absensi_tka', pendingDeleteId);
-          await deleteDoc(docRef);
-        } else {
-          globalAbsensiData = globalAbsensiData.filter(d => d.id !== pendingDeleteId);
-          saveLocalData();
-          updateUI();
-        }
-        showToast("Data telah berhasil dihapus.", "success");
-      } catch (err) {
-        console.error("Delete Error:", err);
-        showToast("Gagal menghapus data.", "error");
-      } finally {
-        closeDeleteModal();
-      }
-    };
-
-    window.switchTab = function(tabName) {
-      // Hide all tabs
-      ['dashboard', 'input', 'rekap'].forEach(tab => {
-        document.getElementById(`tab-${tab}`).classList.add('hidden');
-      });
-      // Show targeted tab
-      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-
-      // Update Nav Button Styles (Desktop)
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('bg-sky-50', 'text-sky-600', 'shadow-sm');
-        btn.classList.add('text-slate-600');
-      });
-      document.getElementById(`nav-${tabName}`).classList.add('bg-sky-50', 'text-sky-600', 'shadow-sm');
-      document.getElementById(`nav-${tabName}`).classList.remove('text-slate-600');
-
-      // Update Mobile Nav Styles
-      document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
-        btn.classList.remove('text-sky-600');
-        btn.classList.add('text-slate-500');
-      });
-      document.getElementById(`mobile-nav-${tabName}`).classList.add('text-sky-600');
-      document.getElementById(`mobile-nav-${tabName}`).classList.remove('text-slate-500');
-
-      // Titles Update
-      if (tabName === 'dashboard') {
-        document.getElementById('pageTitle').innerText = 'Dashboard Analitik';
-        document.getElementById('pageSubtitle').innerText = 'Ringkasan statistik real-time ketidakhadiran Peserta TKA';
-      } else if (tabName === 'input') {
-        document.getElementById('pageTitle').innerText = 'Input Ketidakhadiran';
-        document.getElementById('pageSubtitle').innerText = 'Formulir pengisian data ketidakhadiran peserta';
-      } else if (tabName === 'rekap') {
-        document.getElementById('pageTitle').innerText = 'Data Rekapitulasi';
-        document.getElementById('pageSubtitle').innerText = 'Daftar lengkap dan filter data ketidakhadiran TKA';
-      }
-    };
-
-    window.manualRefresh = function() {
-      if (!IS_PREVIEW && db) {
-        listenRealtimeData();
-      } else {
-        loadLocalFallback();
-      }
-      showToast("Data diperbarui.", "info");
-    };
-
-    window.exportToXLSX = function() {
-      if (globalAbsensiData.length === 0) {
-        showToast("Tidak ada data untuk diekspor.", "error");
-        return;
-      }
-
-      // Prepare array of objects for Excel export
-      const dataToExport = globalAbsensiData.map((row, index) => ({
-        "No": index + 1,
-        "Username / NISN": row.username || "",
-        "Nama Lengkap": row.namaLengkap || "",
-        "Program Keahlian": row.programKeahlian || "",
-        "Kelas": row.kelas || "",
-        "Nama Labor": row.namaLabor || "",
-        "Sesi": row.sesi || "",
-        "Mata Uji": row.mataUji || "",
-        "Alasan Ketidakhadiran": row.alasan || "",
-        "Keterangan Lainnya": row.keteranganLain || ""
-      }));
-
-      // Create Worksheet and Workbook
-      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Ketidakhadiran");
-
-      // Set custom column widths
-      worksheet['!cols'] = [
-        { wch: 5 },  // No
-        { wch: 16 }, // NISN
-        { wch: 25 }, // Nama
-        { wch: 25 }, // Jurusan
-        { wch: 12 }, // Kelas
-        { wch: 16 }, // Labor
-        { wch: 10 }, // Sesi
-        { wch: 28 }, // Mata Uji
-        { wch: 18 }, // Alasan
-        { wch: 25 }  // Keterangan
-      ];
-
-      // Export file
-      const fileName = `Rekap_Ketidakhadiran_TKA_${new Date().toISOString().slice(0,10)}.xlsx`;
-      XLSX.writeFile(workbook, fileName);
-
-      showToast("File Excel (.xlsx) berhasil diunduh!", "success");
-    };
-
-    window.exportToCSV = function() {
-      if (globalAbsensiData.length === 0) {
-        showToast("Tidak ada data untuk diekspor.", "error");
-        return;
-      }
-
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "No,Username/NISN,Nama Lengkap,Program Keahlian,Kelas,Nama Labor,Sesi,Mata Uji,Alasan,Keterangan Lain\n";
-
-      globalAbsensiData.forEach((row, index) => {
-        const line = [
-          index + 1,
-          `"${row.username}"`,
-          `"${row.namaLengkap}"`,
-          `"${row.programKeahlian}"`,
-          `"${row.kelas}"`,
-          `"${row.namaLabor}"`,
-          `"${row.sesi}"`,
-          `"${row.mataUji}"`,
-          `"${row.alasan}"`,
-          `"${row.keteranganLain || ''}"`
-        ].join(",");
-        csvContent += line + "\n";
-      });
-
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `Rekap_Ketidakhadiran_TKA_${new Date().toISOString().slice(0,10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      showToast("File CSV berhasil diunduh!", "success");
-    };
-  </script>
+    </script>
 </body>
 </html>
