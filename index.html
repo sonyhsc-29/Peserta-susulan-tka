@@ -245,7 +245,7 @@
         <!-- Admin Control Footer -->
         <div class="clay-card p-4 text-center">
             <div id="adminStatusArea" class="space-y-2">
-                <span class="text-xs text-slate-400 font-medium block">Status Hak Akses:</span>
+                <span class="text-xs text-slate-400 font-medium block">Status Login:</span>
                 <span id="badgeAccessStatus" class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
                     <i class="fa-solid fa-user text-slate-400 mr-1"></i> Mode Publik
                 </span>
@@ -263,7 +263,7 @@
         <header class="hidden lg:flex justify-between items-center mb-8">
             <div>
                 <h1 class="text-2xl font-extrabold text-slate-800">Sistem Rekap Ketidakhadiran TKA</h1>
-                <p class="text-slate-400 text-sm font-medium">SMK Negeri 2 Padang - Tahun 2026</p>
+                <p class="text-slate-400 text-sm font-medium">SMK Negeri 2 Padang - Tahun Ajaran Aktif</p>
             </div>
             <div class="flex items-center space-x-3">
                 <div class="clay-card px-4 py-2 flex items-center space-x-2 text-xs font-semibold text-slate-600">
@@ -295,7 +295,7 @@
                         <!-- 1. Username TKA -->
                         <div class="space-y-2">
                             <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">1. Username TKA / ID <span class="text-red-500">*</span></label>
-                            <input type="text" id="username_tka" required placeholder="Contoh: K080100002-01023" class="w-full px-4 py-3.5 clay-input text-sm font-medium text-slate-800">
+                            <input type="text" id="username_tka" required placeholder="Contoh: TKA2026001" class="w-full px-4 py-3.5 clay-input text-sm font-medium text-slate-800">
                         </div>
 
                         <!-- 2. Nama Lengkap -->
@@ -513,7 +513,7 @@
                 </div>
 
                 <!-- Filters & Search Bar -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 my-6">
                     <input type="text" id="searchKeyword" oninput="window.applyFilters()" placeholder="Cari nama, username, kelas..." class="px-4 py-2.5 clay-input text-xs font-medium">
                     
                     <select id="filterJurusan" onchange="window.applyFilters()" class="px-4 py-2.5 clay-input text-xs font-semibold text-slate-700">
@@ -530,6 +530,14 @@
                         <option value="">Semua Sesi</option>
                         <option value="Sesi 1">Sesi 1</option>
                         <option value="Sesi 2">Sesi 2</option>
+                    </select>
+
+                    <select id="filterNamaTes" onchange="window.applyFilters()" class="px-4 py-2.5 clay-input text-xs font-semibold text-slate-700">
+                        <option value="">Semua Nama Tes</option>
+                        <option value="Bahasa Indonesia dan Literasi">Bahasa Indonesia & Literasi</option>
+                        <option value="Bahasa Inggris dan Sulingjar">Bahasa Inggris & Sulingjar</option>
+                        <option value="Matematika dan Numerasi">Matematika & Numerasi</option>
+                        <option value="2 Mata Pelajaran Pilihan">2 Mata Pelajaran Pilihan</option>
                     </select>
                 </div>
 
@@ -663,12 +671,12 @@
         const IS_PREVIEW = false; // Set false jika sudah deploy penuh
 
         const firebaseConfig = {
-          apiKey: "AIzaSyDogDNL30gbwl4e0N_POH7FNMjyl_HphAs",
-          authDomain: "tka-absen.firebaseapp.com",
-          projectId: "tka-absen",
-          storageBucket: "tka-absen.firebasestorage.app",
-          messagingSenderId: "776789266364",
-          appId: "1:776789266364:web:b8d68b32edcb7542ab25b9"
+            apiKey: "AIzaSyDogDNL30gbwl4e0N_POH7FNMjyl_HphAs",
+            authDomain: "tka-absen.firebaseapp.com",
+            projectId: "tka-absen",
+            storageBucket: "tka-absen.firebasestorage.app",
+            messagingSenderId: "776789266364",
+            appId: "1:776789266364:web:b8d68b32edcb7542ab25b9"
         };
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'tka-smkn2-padang';
@@ -1053,6 +1061,7 @@
             const search = document.getElementById('searchKeyword').value.toLowerCase();
             const jur = document.getElementById('filterJurusan').value;
             const sesi = document.getElementById('filterSesi').value;
+            const namaTesFilter = document.getElementById('filterNamaTes')?.value;
 
             const filtered = allRekapData.filter(item => {
                 const matchSearch = !search || 
@@ -1063,7 +1072,18 @@
                 const matchJur = !jur || item.program_keahlian === jur;
                 const matchSesi = !sesi || item.sesi === sesi;
 
-                return matchSearch && matchJur && matchSesi;
+                let matchTes = true;
+                if (namaTesFilter) {
+                    if (Array.isArray(item.nama_tes)) {
+                        matchTes = item.nama_tes.includes(namaTesFilter);
+                    } else if (typeof item.nama_tes === 'string') {
+                        matchTes = item.nama_tes.includes(namaTesFilter);
+                    } else {
+                        matchTes = false;
+                    }
+                }
+
+                return matchSearch && matchJur && matchSesi && matchTes;
             });
 
             renderTable(filtered);
